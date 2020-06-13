@@ -1,0 +1,53 @@
+/*!
+ * @(#) InternalServerError.scss
+ * 版权声明 厦门畅享信息技术有限公司, 版权所有 违者必究
+ *
+ * Copyright:  Copyright (c) 2020
+ * Company:厦门畅享信息技术有限公司
+ * @author yangjc
+ * 2020-01-06 22:16:08
+ */
+
+.internalServerError {
+    display: flex;
+    justify-content: center;
+    margin-top: 150px;
+
+    .wrapper {
+        display: flex;
+
+        img { margin-right: 44px }
+        > div {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        h1, p {
+            color: $color-text1-2;
+            line-height: 1.0;
+        }
+        h1 { font-size: 60px }
+        p {
+            margin-top: 20px;
+            font-size: 18px;
+        }
+    }
+}
+@include media(xs) {
+    .internalServerError .wrapper {
+        flex-direction: column;
+        align-items: center;
+        padding: 0 30px;
+
+        img {
+            margin-right: 0;
+            width: 100%;
+        }
+        h1 {
+            display: none;
+        }
+        p {
+            margin-top: 30px;
+        }
+    }
+}

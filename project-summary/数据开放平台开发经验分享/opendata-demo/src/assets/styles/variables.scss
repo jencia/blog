@@ -1,0 +1,69 @@
+/*!
+ * @(#) variables.scss
+ * 版权声明 厦门畅享信息技术有限公司, 版权所有 违者必究
+ *
+ *  Copyright:  Copyright (c) 2019
+ *  Company:厦门畅享信息技术有限公司
+ *  @author huangqz
+ *  2019-12-03 09:26:09
+ */
+
+$color-brand: #3cb2e6;
+$color-brand-hover: #288dbf;
+
+$color-notice-5: #288dbf; // 按钮hover
+
+$color-text1-4: #323538; // 标题
+$color-text1-3: #65686d; // 正文
+$color-text1-2: #a4a5a9; // 提示
+$color-text1-1: #d0d1d4; // 禁用
+
+$color-error-4: #ee5544;
+$color-warning-4: #ff9922;
+$color-other-2: #fccc12;
+
+$color-line1-2: #ebeced;   // 边框
+$color-fill1-1: #f7f8f9;  // 背景
+
+$color-success-3: #00bb88; // 成功
+$color-error-3: #ff6655;   // 失败
+$color-warning-3: #ffaa33; // 撤销
+$color-help-4: #00bbdd;    // 待处理
+
+$color-text-title: $color-text1-4;
+$color-text-desc: $color-text1-3;
+$color-text-tip: $color-text1-2;
+$color-text-disabled: $color-text1-1;
+
+$screen-xs-max: 768px;
+
+$screen-sm-min: 769px;
+$screen-sm-max: 992px;
+
+$screen-md-min: 993px;
+$screen-md-max: 1200px;
+
+$screen-lg-min: 1201px;
+
+@mixin media ($type) {
+    @if index($type, xs) != null {
+        @media only screen and (max-width: $screen-xs-max){
+            @content;
+        }
+    }
+    @if index($type, sm) != null {
+        @media only screen and (min-width: $screen-sm-min) and (max-width: $screen-sm-max) {
+            @content;
+        }
+    }
+    @if index($type, md) != null {
+        @media only screen and (min-width: $screen-md-min) and (max-width: $screen-md-max) {
+            @content;
+        }
+    }
+    @if index($type, lg) != null {
+        @media only screen and (min-width: $screen-lg-min) {
+            @content;
+        }
+    }
+}

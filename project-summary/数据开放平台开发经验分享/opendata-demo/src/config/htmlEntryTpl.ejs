@@ -1,0 +1,32 @@
+<% var ROOT = '/opendata' %>
+<!DOCTYPE html>
+<html lang="zh-cmn-Hans">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+    <meta name="renderer" content="webkit">
+    <meta name="force-rendering" content="webkit">
+    <meta name="keywords" content="厦门,大数据,安全开放,生态,政务数据,公共数据,人工智能,生态圈,数据产业,合规使用,数据价值">
+    <meta name="description" content="厦门大数据安全开放平台 - 致力打造大数据安全开放生态环境，构建自生长生态圈，推动政务大数据高质量开放，实现对公共数据资源的科学开发、合规使用和安全保护">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <link rel="shortcut icon" href="<%= ROOT%>/favicon.ico" />
+    <title>厦门市大数据安全开放平台<%= title ? ` - ${title}` : '' %></title>
+    <script>function getBrowserInfo(){var e=navigator.userAgent.toLowerCase(),r=e.indexOf('compatible')>-1&&e.indexOf(!1),i=(e.indexOf('edge'),e.indexOf('trident')>-1&&e.indexOf('rv:11.0')>-1);if(r){new RegExp('msie (\\d+\\.\\d+);').test(e);var n=parseFloat(RegExp.$1);if(7==n)return'IE/7';if(8==n)return'IE/8';if(9==n)return'IE/9';if(10==n)return'IE/10'}return i?'IE/11':e.indexOf('firefox')>0?e.match(/firefox\/[\d.]+/gi):e.indexOf('safari')>0&&e.indexOf('chrome')<0?e.match(/safari\/[\d.]+/gi):e.indexOf('chrome')>0?e.match(/chrome\/[\d.]+/gi):void 0}var browser=getBrowserInfo(),b_name=(browser+"").replace(/[0-9./]/gi,""),b_version=parseInt((browser+"").replace(/[^0-9.]/gi,""));'IE'==b_name&&b_version<10&&(window.location.href='<%= ROOT%>/browserUpgrade/index.html');</script>
+    <style>body{margin:0}.spin-tmp{padding:160px 0;text-align:center}.spin-dot-tmp{position:relative;display:inline-block;font-size:32px;width:1em;height:1em;transform:rotate(45deg);animation:antRotate 1.2s infinite linear}.spin-dot-item-tmp{position:absolute;display:block;width:14px;height:14px;background-color:#1890ff;border-radius:100%;transform:scale(0.75);transform-origin:50% 50%;opacity:.3;animation:antSpinMove 1s infinite linear alternate}.spin-dot-item-tmp:nth-child(1){top:0;left:0}.spin-dot-item-tmp:nth-child(2){top:0;right:0;animation-delay:.4s}.spin-dot-item-tmp:nth-child(3){right:0;bottom:0;animation-delay:.8s}.spin-dot-item-tmp:nth-child(4){bottom:0;left:0;animation-delay:1.2s}@keyframes antSpinMove{to{opacity:1}}@keyframes antRotate{to{transform:rotate(405deg)}}</style>
+</head>
+<body>
+<div id="root">
+    <div class="spin-tmp">
+        <span class="spin-dot-tmp">
+            <i class="spin-dot-item-tmp"></i>
+            <i class="spin-dot-item-tmp"></i>
+            <i class="spin-dot-item-tmp"></i>
+            <i class="spin-dot-item-tmp"></i>
+        </span>
+    </div>
+</div>
+</body>
+</html>

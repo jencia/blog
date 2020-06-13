@@ -1,0 +1,3 @@
+{
+  "extends": "@yo/eslint-config-sunsharing/react"
+}

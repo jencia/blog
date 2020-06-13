@@ -1,0 +1,6 @@
+dist/
+node_modules/
+public/
+bin/
+./webpack.config.js
+docs/

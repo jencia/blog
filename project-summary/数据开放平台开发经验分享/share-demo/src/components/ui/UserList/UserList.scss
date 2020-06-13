@@ -1,0 +1,9 @@
+.user_info {
+    padding: 12px;
+    cursor: default;
+    border-bottom: 1px solid #e5e6e7;
+
+    &:nth-child(2n + 1) {
+        background-color: #fcfcfc;
+    }
+}

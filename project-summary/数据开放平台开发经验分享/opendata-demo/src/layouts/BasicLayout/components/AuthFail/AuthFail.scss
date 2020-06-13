@@ -1,0 +1,42 @@
+/*!
+ * @(#) AuthFail.scss
+ * 版权声明 厦门畅享信息技术有限公司, 版权所有 违者必究
+ *
+ * Copyright:  Copyright (c) 2019
+ * Company:厦门畅享信息技术有限公司
+ * @author yangjc
+ * 2019-12-20 00:41:09
+ */
+
+.authFail {
+    display: flex;
+    justify-content: center;
+    margin-top: 150px;
+
+    .wrapper {
+        display: flex;
+
+        img { margin-right: 44px }
+        > div {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        h1, p {
+            line-height: 1.0;
+        }
+        h1 {
+            font-size: 18px;
+            color: $color-text1-4;
+        }
+        p {
+            margin-top: 16px;
+            font-size: 14px;
+            color: $color-text1-2;
+        }
+        button {
+            width: 92px;
+            margin-top: 36px;
+        }
+    }
+}
