@@ -131,11 +131,10 @@ class MyPromise {
   finally (callback) {
     if (checkFnType(callback)) return this
 
-    return this.then(value => {
-      return MyPromise.resolve(callback()).then(() => value)
-    }, e => {
-      return MyPromise.resolve(callback()).then(() => { throw e })
-    })
+    return this.then(
+      value => MyPromise.resolve(callback()).then(() => value),
+      e => MyPromise.resolve(callback()).then(() => { throw e })
+    )
   }
 }
 
@@ -157,19 +156,22 @@ MyPromise.reject = reason => {
   })
 }
 
+// 多个 MyPromise 同时进行，所有 MyPromise 都响应完后再返回所有的值
 MyPromise.all = arr => {
-  const result = []
-  let count = 0
+  const result = [] // 最终结果值
+  let count = 0     // 当前完成个数
 
   return new MyPromise((resolve, reject) => {
-    const addData = (key, value) => {
-      result[key] = value
+    const addData = (i, value) => {
+      // 完成后设置对应索引下值，个数加一，如果完成个数等于总数就 resolve
+      result[i] = value
       count += 1
       count === arr.length && resolve(result)
     }
     for (let i in arr) {
       const curr = arr[i];
 
+      // 如果是 MyPromise 值则在响应结束后添加值，否则立即添加值
       curr instanceof MyPromise
         ? curr.then(v => addData(i, v), reject)
         : addData(i, arr[i])
@@ -177,13 +179,9 @@ MyPromise.all = arr => {
   })
 }
 
+// 多个 MyPromise 同时进行，取最早得到响应的 MyPromise
 MyPromise.race = arr => {
   return new MyPromise((resolve, reject) => {
-    const addData = (key, value) => {
-      result[key] = value
-      count += 1
-      count === arr.length && resolve(result)
-    }
     for (let i in arr) {
       const curr = arr[i];
 
