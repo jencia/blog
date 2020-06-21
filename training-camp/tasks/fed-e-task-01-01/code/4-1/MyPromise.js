@@ -21,18 +21,17 @@ const event = require('./event')
 
 const STATUS = {
   PENDING: 'pending',     // 等待
-  RESOLVED: 'resolved', // 成功
+  RESOLVED: 'resolved',   // 成功
   REJECTED: 'rejected'    // 失败
 }
-
 class MyPromise {
   constructor (actuator) {
     if (!checkFnType(actuator)) {
       throw new TypeError(`Promise resolver ${fn} is not a function`)
     }
-    this._tag = Symbol()
-    this.status = STATUS.PENDING
-    this.value = undefined
+    this._tag = Symbol()          // 为了隔离各个事件处理的标识
+    this.status = STATUS.PENDING  // 当前响应状态
+    this.value = undefined        // 当前响应值
 
     // 结果响应，成功和失败代码合在一起
     event.on(this._tag, 'response', ({ value, status }) => {
@@ -52,7 +51,7 @@ class MyPromise {
       event.off(this._tag)
     })
 
-      // 根据状态值获取对应的响应函数
+    // 根据状态值获取对应的响应函数
     const getResFn = status => value => event.emit(this._tag, 'response', { value, status })
     try {
       // 执行器在实例化的时候立即执行
@@ -81,12 +80,12 @@ class MyPromise {
   }
 
   then (successCallback, failCallback) {
-    this._callNum = this._callNum ? this._callNum + 1 : 1
+    this._callNum = this._callNum ? this._callNum + 1 : 1   // 同一个 MyPromise 实例多次调用的次数
     // 非函数类型的参数使用默认参数
     const successCb = checkFnType(successCallback) ? successCallback : v => v
     const failCb = checkFnType(failCallback) ? failCallback : v => { throw v }
     const index = this._callNum  // 拷贝一份避免到后面都变成最后一个值
-    let thenValue
+    let thenValue   // 存储 then 的返回值
 
     try {
       // TODO 微任务怎么模拟呢？
@@ -97,12 +96,8 @@ class MyPromise {
       }
       // 无论什么状态下都去绑定回调事件，同步代码会执行到空的，只有异步代码才会执行到实际回调
       // 事件名称带 :num 表示这是第几个 then 方法，触发事件时会无视序号全部执行
-      event.on(this._tag, `successCallback:${index}`, res => {
-        thenValue = successCb(res)
-      })
-      event.on(this._tag, `failCallback:${index}`, e => {
-        thenValue = failCb(e)
-      })
+      event.on(this._tag, `successCallback:${index}`, res => (thenValue = successCb(res)))
+      event.on(this._tag, `failCallback:${index}`, e => (thenValue = failCb(e)))
     } catch (e) {
       return MyPromise.reject(e)
     }
@@ -112,6 +107,7 @@ class MyPromise {
       return Promise.resolve(thenValue)
     }
 
+    // 异步代码需等待执行器执行完再返回 then 的结果
     return new MyPromise((resolve, reject) => {
       const getHandleFn = () => () => {
         // 如果返回自身实例就报错
@@ -125,9 +121,13 @@ class MyPromise {
       event.on(this._tag, `failCallback:end:${index}`, getHandleFn(STATUS.REJECTED))
     })
   }
+
+  // 捕捉失败响应
   catch (failCallback) {
       return this.then(undefined, failCallback)
   }
+
+  // 不管成功或失败都执行
   finally (callback) {
     if (checkFnType(callback)) return this
 
