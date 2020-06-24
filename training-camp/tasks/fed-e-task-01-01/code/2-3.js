@@ -10,6 +10,6 @@ let _average = function (xs) {
 //     }, cars)
 //     return _average(dollar_values);
 // }
-let averageDollarValue = fp.flowRight(_average, fp.map(car => car.dollar_value))
+let averageDollarValue = fp.flowRight(_average, fp.map(fp.prop('dollar_value')))
 
 console.log(averageDollarValue(cars));
