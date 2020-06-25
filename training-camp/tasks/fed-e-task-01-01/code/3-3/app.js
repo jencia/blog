@@ -5,11 +5,6 @@ let safeProp = fp.curry(function (x, o) {
 })
 let user = { id: 2, name: 'Albert' }
 
-let ex3 = () => Container.of(user)
-    .map(fp.flowRight(
-        fp.first,
-        fp.prop('_value'),
-        safeProp('name')
-    ))
+let ex3 = fp.flowRight(fp.map(fp.first), safeProp('name'))
 
-console.log(ex3());
+console.log(ex3(user));

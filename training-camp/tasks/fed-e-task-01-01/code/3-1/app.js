@@ -1,8 +1,7 @@
 const fp = require('lodash/fp')
 const { Maybe, Container } = require('./support')
-let maybe = Maybe.of([5, 6, 1]);
+let maybe = Maybe.of([5, 6, 1])
 
-let ex1 = num => Container.of(maybe._value).map(fp.map(fp.add(num)))
+let ex1 = fp.map(fp.add(1))
 
-console.log(ex1(1));
-console.log(ex1(5));
+console.log(maybe.map(ex1));
