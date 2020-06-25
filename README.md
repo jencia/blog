@@ -1,6 +1,6 @@
 # 诀死行者的修行笔记
 
-![logo](./experience/images/logo.png)
+![logo](https://jencia.github.io/images/blog/experience/logo.png)
 
 这是一本来自于一名前端开发工程师的的修行笔记。
 
