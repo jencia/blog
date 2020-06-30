@@ -335,7 +335,7 @@ V8 内存空间一分为二
 4. 执行用户行为，一段时间后停止录制
 5. 分析界面中记录的内存信息
 
-### 内存问题
+## 内存问题的体现
 
 内存问题的外在表现：
 
@@ -356,9 +356,11 @@ V8 内存空间一分为二
 - 堆快照查找分离 DOM
 - 判断是否存在频繁的垃圾回收
 
-### 任务管理器监控内存
+### 任务管理器
 
-以下是一段用于演示监控内存的测试页面代码
+任务管理器可用于监控内存变化，从而判断是否存在内存问题。
+
+以下是测试代码：
 
 ```html
 <!DOCTYPE html>
@@ -400,9 +402,324 @@ V8 内存空间一分为二
 
 ![](https://jencia.github.io/images/blog/training-camp/notes/Optimization-11.png)
 
-内存从 833k 一下子暴涨到 1256k ，这就是存在问题了。不过任务管理器只能看出是否存在问题，并不能知道具体什么问题，无法定位问题所在位置，所以还得借助其他工具。
+内存从 833k 一下子暴涨到 1256k ，这就是存在问题了。不过任务管理器只能看出是否存在问题，并不能知道具体什么问题，无法定位问题所在位置。如果需要定位问题就需要借助其他工具了。
 
-### Timeline 记录内存
+### Timeline
+
+Timeline 是 Performance 里的一部分，用来记录内存的变化。可以通过内存变化分析内存问题，从而定位存在内存问题的代码区域。
+
+以下是测试代码：
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>时间线记录内存变化</title>
+</head>
+<body>
+    <button id="btn">Add</button>
+    <script>
+        var arrList = []
+
+        function test () {
+            for (var i = 0; i < 100000; i++) {
+                const p = document.createElement('p')
+                document.body.appendChild(p)
+            }
+            arrList.push(new Array(100000).join('x'))
+        }
+        
+        document.getElementById('btn').onclick = test;
+    </script>
+</body>
+</html>
+```
+
+通过 Performance 工具监听内存，录制过程中先间断点击两下 Add 按钮，再连续点击四下 Add 按钮，得到以下的监控结果。
+
+![](https://jencia.github.io/images/blog/training-camp/notes/Optimization-12.png)
 
 
+第一次使用 Memory（内存）默认关闭的，需要打勾了才能看到 timeline 时序图。timeline 上有好几个时间线，这边我们只需要用到 “JS Heap” ，所以只留下一个打勾。
 
+从图上我们可以看出，前半段内存上升了两次又降下来，这两次就是录制过程中间断的点了两下。后半段连续连了四下，对应 timeline 图上连续暴涨。每次上涨之后又会下降，然后趋于平稳，这是因为浏览器有垃圾回收机制。新增 DOM 和新增大容量的数组，这时候内存暴涨。之后触发垃圾回收机制，数组没被引用就被回收了，dom 节点没被回收所以内存没有下降到原来的位置。
+
+从上面这张图来看，这代码还算正常的，因为有升的地方都有降，才就是一个正常的表现，如果是一直增加就要注意了，可能发生内存泄露了。这时候可以根据有问题的片段，查看对应的界面表现，从而定义到相关代码。
+
+### 堆快照
+
+堆快照可查找到分离 DOM ，什么是分离 DOM ？
+
+DOM 元素分类两种，一种是在 DOM 树上的，属于界面元素。另一种不在 DOM 树上，这些 DOM 有的是没有对象引用的就是垃圾对象，这些会被垃圾回收。有的是有对象引用，那就是分离 DOM 。分离 DOM 没有展示出来，却占据着内存，有些分离 DOM 是永远都不会使用的，这些就需要清除掉。堆快照就是帮忙你找到这些分离 DOM 。
+
+以下是测试代码：
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>堆快照监控内存变化</title>
+</head>
+<body>
+    <button id="btn">Add</button>
+    <script>
+        var tmpEle
+
+        function test () {
+            var ul = document.createElement('ul')
+            for (var i = 0; i < 10; i++) {
+                const li = document.createElement('li')
+                ul.appendChild(li);
+            }
+            tmpEle = ul
+        }
+        document.getElementById('btn').onclick = test;
+    </script>
+</body>
+</html>
+```
+
+堆快照工具位于开发者工具的 Memory（内存）里面，打开后可以看到下图的样子。
+
+![](https://jencia.github.io/images/blog/training-camp/notes/Optimization-13.png)
+
+profiling type（分析类型）的第一个 “Heap snapshot” 就是堆快照。点击 “Take snapshot” 就开始生成第一张快照。这时候会 Constructor 里面会有很多对象，我们要找的是分离 DOM ，分离 DOM 的前几个字母是 “deta” ，搜索这个关键字就能看到所有分离 DOM ，如下图所示：
+
+![](https://jencia.github.io/images/blog/training-camp/notes/Optimization-14.png)
+
+这时候搜到的内容是空的，说明这时候没有分离 DOM 的存在。接下来点击 “Add” 按钮，然后再生出一张快照，如下图：
+
+![](https://jencia.github.io/images/blog/training-camp/notes/Optimization-15.png)
+
+这时候就能搜到，能搜到就说明有问题，我们可以根据搜出来的结果找到对应的代码，从而解决内存问题。
+
+### 判断是否存在频繁 GC
+
+为什么确定频繁垃圾回收？
+
+- GC 工作时应用程序是停止的
+- 频繁且过长的 GC 会导致应用假死
+- 用户使用中感知应用卡顿
+
+确定频繁的垃圾回收：
+
+- Timeline 中频繁的上升下降
+- 任务管理器中数据频繁的增加减小
+
+## 代码优化
+
+如何精准测试 JavaScript 性能：
+
+- 本质上就是采集大量的执行样本进行数学统计和分析
+- 使用基于 Benchmark.js 的 https://jsperf.com 完成
+
+JSPerf 使用流程：
+
+1. 使用 Github 账号登录
+2. 填写个人信息 （非必须）
+3. 填写详细的测试用例信息（ title 、slug）
+4. 填写准备代码（ DOM 操作时经常使用）
+5. 填写必要的 setup 与 teardown 代码
+6. 填写测试代码片段
+
+### 慎用全局变量
+
+为什么要慎用？
+
+- 全局变量定义在全局执行上下文，是所有作用域链的顶端
+- 全局执行上下一直存在于上下文执行栈，直到程序退出
+- 如果某个局部作用域出现了同名变量则会遮蔽或污染全局
+
+### 缓存全局变量
+
+将使用中无法避免的全局变量缓存到局部。
+
+
+```js
+// bad
+function getBtn () {
+    var oBtn1 = document.getElementById('btn1')
+    var oBtn3 = document.getElementById('btn3')
+    var oBtn5 = document.getElementById('btn5')
+    var oBtn7 = document.getElementById('btn7')
+    var oBtn9 = document.getElementById('btn9')
+}
+
+// good
+function getBtn () {
+    var obj = document
+    var oBtn1 = obj.getElementById('btn1')
+    var oBtn3 = obj.getElementById('btn3')
+    var oBtn5 = obj.getElementById('btn5')
+    var oBtn7 = obj.getElementById('btn7')
+    var oBtn9 = obj.getElementById('btn9')
+}
+```
+
+### 通过原型对象添加附加方法
+
+```js
+// bad
+var fn1 = function () {
+    this.foo = function () {
+        console.log(11111)
+    }
+}
+
+// good
+var fn2 = function () {}
+fn2.prototype.foo = function () {
+    console.log(11111)
+}
+```
+
+### 避开闭包陷阱
+
+闭包特点：
+
+- 外部具有指向内部的引用
+- 在 “外” 部作用域访问 ”内部作用域“ 的数据
+
+关于闭包：
+
+- 闭包是一种强大的语法
+- 闭包使用不当很容易出现内存泄露
+- 不要为了闭包而闭包
+
+```js
+// bad
+function foo () {
+    var el = document.getElementById('btn')
+    el.onclick = function () {
+        console.log(el.id)
+    }
+}
+
+// good
+function foo () {
+    var el = document.getElementById('btn')
+    el.onclick = function () {
+        console.log(el.id)
+    }
+    el = null
+}
+```
+
+### 避免属性访问方法使用
+
+JavaScript 中的面向对象：
+
+- JS 不需要属性的访问方法，所有属性都是外部可见的
+- 使用属性访问方法只会增加一层重定义，没有访问的控制力
+
+```js
+// bad
+function Person () {
+    this.name = 'tom'
+    this.age = 18
+    this.getAge = function () {
+        return this.age
+    }
+}
+const p1 = new Person()
+p1.getAge()
+
+// good
+function Person () {
+    this.name = 'tom'
+    this.age = 18
+}
+const p1 = new Person();
+p1.age
+```
+
+### for 循环优化
+
+```js
+var btnList = document.getElementById('btn')
+
+// bad
+for (var i = 0; i < btnList.length; i++) {
+    console.log(i)
+}
+
+// good
+for (var i = 0, len = btnList.length; i < len; i++) {
+    console.log(i)
+}
+```
+
+### 选择最优的循环方法
+
+```js
+var arr = [1, 2, 3, 4, 5]
+
+// bad
+for (var i = 0, len = arr.length; i < len; i++) {
+    console.log(item[i])
+}
+
+// bad
+for (var i in arr) {
+    console.log(arr[i])
+}
+
+// good
+arr.forEach(function (item) {
+    console.log(item)
+})
+```
+
+### 文档碎片优化节点添加
+
+```js
+// bad
+for (var i = 0; i < 10; i++) {
+    var p = document.createElement('p')
+    p.innerHTML = i
+    document.body.appendChild(p)
+}
+
+// good
+const fragEle = document.createDocumentFragment()
+for (var i = 0; i < 10; i++) {
+    var p = document.createElement('p')
+    p.innerHTML = i
+    fragEle.appendChild(p)
+}
+document.body.appendChild(fragEle)
+```
+
+### 克隆优化节点操作
+
+```js
+// bad
+for (var i = 0; i < 10; i++) {
+    var p = document.createElement('p')
+    p.innerHTML = i
+    document.body.appendChild(p)
+}
+
+// good
+var p = document.createElement('p')
+for (var i = 0; i < 10; i++) {
+    var newP = p.cloneNode(false)
+    newP.innerHTML = i
+    document.body.appendChild(newP)
+}
+```
+
+### 直面量替换 new Object
+
+```js
+// bad
+var a1 = new Array(3)
+a1[0] = 1
+a1[1] = 2
+a1[2] = 3
+
+// good
+var a2 = [1, 2, 3]
+```
