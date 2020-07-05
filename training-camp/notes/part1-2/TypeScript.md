@@ -202,7 +202,7 @@ function sum (a, b) {
 
 1. 初始化项目工程，这边使用 [yarn](https://classic.yarnpkg.com/zh-Hans/docs/install#windows-stable) 。
 
-```batch
+```bash
 yarn init --yes
 ```
 
@@ -210,13 +210,13 @@ yarn init --yes
 
 2. 安装 flow-bin
 
-```batch
+```bash
 yarn add flow-bin --dev
 ```
 
 3. 初始化 flow
 
-```batch
+```bash
 yarn flow init
 ```
 
@@ -245,7 +245,7 @@ flow 增加了类型注解的写法，也就是在参数名后面跟上冒号（
 
 5. 校验
 
-```batch
+```bash
 yarn flow
 ```
 
@@ -261,13 +261,13 @@ yarn flow
 
 1. 安装
 
-```batch
+```bash
 yarn add flow-remove-types --dev
 ```
 
 2. 使用
 
-```batch
+```bash
 yarn flow-remove-types . -d dist
 ```
 
@@ -279,7 +279,7 @@ yarn flow-remove-types . -d dist
 
 那命令行就应该改成这样：
 
-```batch
+```bash
 yarn flow-remove-types src -d dist
 ```
 
@@ -289,7 +289,7 @@ yarn flow-remove-types src -d dist
 
 1. 安装
 
-```batch
+```bash
 yarn add @babel/core @babel/cli @babel/preset-flow --dev
 ```
 
@@ -311,7 +311,7 @@ yarn add @babel/core @babel/cli @babel/preset-flow --dev
 
 3. 使用
 
-```batch
+```bash
 yarn babel src -d dist
 ```
 
@@ -484,7 +484,7 @@ TypeScript = JavaScript + 类型系统 + ES6+新特性
 
 1. 初始化项目工程。
 
-```batch
+```bash
 yarn init --yes
 ```
 
@@ -492,7 +492,7 @@ yarn init --yes
 
 2. 安装 typescript
 
-```batch
+```bash
 yarn add typescript --dev
 ```
 
@@ -510,7 +510,7 @@ hello('TypeScript');    // Hello, TypeScript
 
 4. 编译
 
-```batch
+```bash
 yarn tsc demo1.ts
 ```
 
@@ -520,7 +520,7 @@ yarn tsc demo1.ts
 
 tsc 提供了一个快速生成配置文件的命令：
 
-```batch
+```bash
 yarn tsc --init
 ```
 
@@ -542,13 +542,13 @@ yarn tsc --init
 
 如果像上一节那样指定文件编译就不会走配置文件，要使用配置文件的话，命令行代码就要改成这样：
 
-```batch
+```bash
 yarn tsc
 ```
 
 如果想显示中文的错误信息，可以这样写:
 
-```batch
+```bash
 yarn tsc --locale zh-CN
 ```
 
