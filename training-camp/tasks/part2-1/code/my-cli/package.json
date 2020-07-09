@@ -1,0 +1,13 @@
+{
+  "name": "my-cli",
+  "bin": "cli.js",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "inquirer": "^7.3.0"
+  },
+  "devDependencies": {
+    "ejs": "^3.1.3"
+  }
+}
