@@ -9,6 +9,7 @@ const loadPlugins = require('gulp-load-plugins')
 const plugins = loadPlugins();
 
 let config = {
+    data: {},
     build: {
         src: 'src',
         dist: 'dist',
@@ -27,6 +28,10 @@ try {
 
     config = {
         ...(extraConfig || {}),
+        data: {
+            ...config.data,
+            ...((extraConfig || {}).data || {})
+        },
         build: {
             ...config.build,
             ...((extraConfig || {}).build || {}),

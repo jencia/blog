@@ -9,22 +9,18 @@
 1. 全局安装 yo
 
 ```sh
-npm install yo --global
-# 或者
 yarn global add yo
 ```
 
 2. 全局安装对应的 generator
 
 ```sh
-npm install generator-node --global
-# 或者
 yarn global add generator-node
 ```
 
 3. 通过 yo 运行 generator
 
-创建一个文件夹，进入文件夹后执行下面命令：
+创建一个项目目录，进入项目目录后执行下面命令：
 
 ```sh
 yo node
@@ -94,7 +90,15 @@ yarn link
 npm link
 ```
 
-**注意** ：mac 系统不能用 `yarn link` ，只能使用 `sudo npm link` 。
+如果使用 yarn 可能会出现 link 成功了，但实际却不能使用，这时候你需要执行这这条命令：
+
+```sh
+yarn global bin
+```
+
+注册到全局 bin 上面，这时候再重新 link 就可以了。
+
+**注意** ：link 属于全局操作，mac 系统要加 `sudo` 。
 
 这时候就可以直接使用项目名作为命令行工具使用：
 
@@ -214,16 +218,18 @@ module.exports = class extends Generator {
 在发布之前我们需要先在本地环境测下，可以借助 link 命令：
 
 ```sh
-npm link
+yarn link
 ```
 
 如果确定没问题了就可以发布，发布模块就是跟发布普通模块没什么区别
 
 ```sh
-npm publish
-# 或者
 yarn publish
 ```
+
+发布前得先 `npm login` 登录，检查 package.json 配置是否正确，比如 version、author。还得先
+
+**注意：** 如果是使用淘宝镜像，是不能发布成功的，需要切换回原生镜像。
 
 6. 使用模块
 
@@ -237,7 +243,7 @@ yo sample
 
 #### 根据模板创建文件
 
-在 app 下创建 templates 文件夹专门用来存放模板文件，这个创建一个 foo.txt 文件，现在的结构如下：
+在 app 下创建 templates 文件夹专门用来存放模板文件，这里创建一个 foo.txt 文件，现在的结构如下：
 
 ```
 ├─ generators/
@@ -409,17 +415,23 @@ yarn init --yes
 
 3. 设置 bin 入口文件
 
-在 package.json 文件里加一个字段，值指向入口文件
+在 package.json 文件里加一个字段，值指向入口文件并创建 cli.js 文件.
 
-```json
+```diff
 {
-    // ...
-    bin: "cli.js"
-    //...
+    "name": "my-cli",
++   "bin": "cli.js",
+    "version": "1.0.0",
+    "main": "index.js",
+    "license": "MIT",
+    "dependencies": {
+        "inquirer": "^7.3.0"
+    },
+    "devDependencies": {
+        "ejs": "^3.1.3"
+    }
 }
 ```
-
-并创建 cli.js 文件
 
 4. 设置 cli.js 文件头
 
@@ -523,3 +535,5 @@ fs.readdir(tplDir, (err, files) => {
     })
 })
 ```
+
+到这里一个简易的脚手架就开发完成了。

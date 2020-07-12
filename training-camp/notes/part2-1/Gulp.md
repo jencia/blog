@@ -28,7 +28,7 @@ exports.foo = done => {
 }
 ```
 
-在 gulp 4.x 里面，所有的任务都是异步任务，都要执行一下 done 来标识任务完成，否则会报错
+采用导出的方式创建任务，导出一个 foo 方法就代表创建了一个 foo 任务。在 gulp 4.x 里面，所有的任务都是异步任务，都要执行一下 done 来标识任务完成，否则会报错
 
 5. 运行任务
 
@@ -44,7 +44,7 @@ yarn gulp foo
 yarn gulp
 ```
 
-没有默认任务也这样去运行会去找第一个任务。
+没有默认任务也这样去运行，会去找第一个任务。
 
 以上是 4.x 的写法，对于以前的写法也能支持，例如：
 
@@ -229,6 +229,7 @@ exports.stream = done => {
 ## 构建过程
 
 构建过程：输入 -> 加工 -> 输出
+
 对应 gulp 的构建过程：读取流 -> 转化流 -> 写入流
 
 以下以 css 代码压缩的例子演示构建过程：
@@ -353,9 +354,11 @@ exports.default = () => {
 └─ package.json
 ```
 
+插件的查找可以到 [官方插件库](https://gulpjs.com/plugins/) 里搜索关键字。
+
 ## Gulp 案例
 
-案例以[这个模板](https://github.com/zce/zce-gulp-demo)进行项目构建
+案例以[这个模板](https://github.com/zce/zce-gulp-demo)进行项目构建。
 
 ### 样式编译
 
@@ -370,6 +373,8 @@ yarn add -D gulp-sass
 ```sh
 npm install -g mirror-config-china --registry=http://registry.npm.taobao.org
 ```
+
+具体 gulp-sass 的使用如下：
 
 ```js
 const { src, dest } = require('gulp')
@@ -735,4 +740,273 @@ const build = series(
 
 这样就大功告成了。
 
+最终完整的代码可以看 [这里](./code/gulp/zce-gulp-demo/gulpfile.js)
 
+## 封装工作流
+
+前面讲了如何使用 Gulp 构建项目，但都是在项目里面创建，只在一个项目内生效。往往很多项目的构建工作是很类似的，可能只是目录结构不一样，其他都是一样的。这时候每个项目都去写这样一套太浪费时间了，如果是复制粘贴过去也要改一大堆，所以有必要封装下这一套构建流程。
+
+### 准备
+
+这边需要另外起一个项目工程专门用来封装工作量，这边叫 yjc-pages 。在工程里执行下 `yarn init --yes`，然后调整下代码和项目结构，最终结构如下：
+
+```
+yjc-pages
+├─ lib/            构建工具源码存放目录通常叫 lib
+│   └─ index.js    入口文件
+├─ CHANGELOG.md    更新日志
+├─ LICENSE         协议文件
+├─ package.json
+└─ README.md       使用说明文档
+```
+
+package.json 在 yarn init 后的调整代码：
+
+```diff
+{
+    "name": "yjc-pages",
+-   "version": "1.0.0",
++   "version": "0.1.0",
+-   "main": "index.js",
++   "main": "lib/index.js",
++   "files": ["lib"],
+    "license": "MIT",
++   "author": {
++       "name": "xxx",
++       "email": "xxx@qq.com"
++   }
+}
+```
+
+- version: 还没开发完成的版本从 0.1.0 开始，后续有改动就小版本升级，等功能完善要公布出来了再改为 1.0.0
+- main: 入口文件指向 lib/index.js
+- files: 被项目包含的文件或文件夹，没包含的在模块安装的时候不会显示出来
+- author: 作者信息，name 作者名称，email 作者邮箱，这两个得跟 npm 登录信息一致
+
+做这些改动是为了发布模块做准备。
+
+### 提取 gulpfile
+
+这边针对上面的 gulp 案例做封装，所以首先需要提取 gulpfile 文件。
+
+gulpfile 包含了一些项目特有的东西，比如 data。这个可以通过在项目工程里面创建一个 pages.config.js 的配置文件，然后在这边读取，读取的命令如下：
+
+```js
+// 获取执行命令行的路径，也就是项目路径
+const cwd = process.cwd()
+
+// 根据项目路径拿到项目下的 pages.config.js 文件
+const extraConfig = require(`${cwd}/pages.config.js`)
+```
+
+这就类似于封装一个函数，数据通过参数传进来。对于外部传进来的数据，为了使用便捷，通常都需要设置默认值。然后通过默认值和外部传进来的值进行合并，从何保证数据的完整性。
+
+表面上看只有一个 data 是外部数据，其实还存在很多外部数据。在案例里我们是针对特定的项目做构建任务，所以做出来的构建工具是只针对特定的项目结构。
+
+```
+├─ public/
+├─ src/
+│  ├─ assets/
+│  │  ├─ fonts/
+│  │  ├─ images/
+│  │  ├─ scripts/
+│  │  └─ styles/
+│  ├─ layouts/
+│  ├─ partials/
+│  ├─ about.html
+│  └─ index.html
+├─ gulpfile.js
+└─ package.json
+```
+
+如果这时候我要把 scripts 放在 src 下，这时候构建工具就出问题，所以需要对每一个路径都改成变量，当然相应的也要设置默认值，最终默认值的数据是这样：
+
+```js
+let config = {
+    data: {},
+    build: {
+        src: 'src',
+        dist: 'dist',
+        temp: 'temp',
+        public: 'public',
+        paths: {
+            styles: 'assets/styles/*.scss',
+            scripts: 'assets/scripts/*.js',
+            pages: '*.html',
+            assets: 'assets/{images,fonts}/**'
+        }
+    }
+}
+```
+
+对于各个任务的路径的修改，这边以 style 任务为例：
+
+```diff
+const style = () => {
+-   return src('src/assets/styles/*.scss', { base: 'src' })
++   return src(config.build.paths.styles, { base: config.build.src, cwd: config.build.src })
+        .pipe(plugins.sass({ outputStyle: 'expanded' }))
+        .pipe(dest('temp'))
+        .pipe(bs.reload({ stream: true }))
+}
+```
+
+这边的 `config.build.paths.styles` 是 `assets/styles/*.scss` ，少了 `src/` ，通常这个 src 是在配置参数里面配 cwd 的。
+
+对于 watch 函数是在第二参数上做配置：
+
+```diff
+- watch('src/assets/styles/*.scss', style)
++ watch(config.build.paths.style, { cwd: config.build.src }, style)
+```
+
+除了外部数据问题，这边还有一点要注意的：
+
+```diff
+const script = () => {
+    return src('src/assets/scripts/*.js', { base: 'src' })
+-       .pipe(plugins.babel({ presets: ['@babel/preset-env'] }))
++       .pipe(plugins.babel({ presets: [require('@babel/preset-env')] }))
+        .pipe(dest('temp'))
+        .pipe(bs.reload({ stream: true }))
+}
+```
+
+这边的 babel 插件要使用 require 引入，否则会到项目下的 node_modules 里找，但其实这是构建工具里才应该有的东西，应该在构建工程目录下找才对，所以要用 require 引入进来。
+
+到这里 gulpfile 的提取就算完成了，最终的完整代码可以看 [这里](./code/gulp/yjc-pages/lib/index.js)
+
+gulpfile 用到的一些依赖到迁移过来，将 devDependencies 里的依赖全部复制过来，放在构建项目里的 dependencies 里：
+
+```diff
+{
+    "name": "yjc-pages",
+    "version": "0.1.0",
+    "main": "lib/index.js",
+    "files": ["lib"],
+    "license": "MIT",
+    "author": {
+        "name": "xxx",
+        "email": "xxx@qq.com"
+-   }
++   },
++   "dependencies": {
++       "@babel/core": "^7.10.4",
++       "@babel/preset-env": "^7.10.4",
++       "browser-sync": "^2.26.7",
++       "del": "^5.1.0",
++       "gulp": "^4.0.2",
++       "gulp-babel": "^8.0.0",
++       "gulp-clean-css": "^4.3.0",
++       "gulp-htmlmin": "^5.0.1",
++       "gulp-if": "^3.0.0",
++       "gulp-imagemin": "^7.1.0",
++       "gulp-load-plugins": "^2.0.3",
++       "gulp-sass": "^4.1.0",
++       "gulp-swig": "^0.9.1",
++       "gulp-uglify": "^3.0.2",
++       "gulp-useref": "^4.0.1"
++   }
+}
+```
+
+这边为什么要放在 dependencies 而不是放在 devDependencies 呢？这些依赖对于项目是开发依赖，但是构建工具属于生产依赖。
+
+### 包装 Gulp CLI
+
+为了使用方便，构建工具通常都需要创建 CLI 工具，通过命令行去执行任务。要创建 CLI 工具还需要对工程做一些调整。
+
+1. 创建 cli 文件
+
+```diff
+  yjc-pages
++ ├─ bin/
++ │   └─ yjc-pages.js
+  ├─ lib/
+  │   └─ index.js
+  ├─ CHANGELOG.md
+  ├─ LICENSE
+  ├─ package.json
+  └─ README.md
+```
+
+2. package.json 添加 bin
+
+```diff
+{
+    "name": "yjc-pages",
+    "version": "0.1.0",
++   "bin": "bin/yjc-pages.js",
+    "main": "lib/index.js",
+-   "files": ["lib"],
++   "files": ["lib", "bin"],
+    "license": "MIT",
+    "author": { ... },
+    "dependencies": { ... }
+}
+```
+
+这边 CLI 文件名称要跟 package.json 的 name 名称保持一致。
+
+3. CLI 文件添加文件头
+
+bin/yjc-pages.js
+
+```js
+#!/usr/bin/env node
+
+// cli 内容
+```
+
+如果是 Linux 或 MacOS系统 需要执行以下命令行
+
+```sh
+chmod 755 bin/yjc-pages.js
+```
+
+4. 编写 CLI 内容
+
+在编写 CLI 内容前，我们要先知道这边应该怎么执行 Gulp ，如果是按照以往的方式：
+
+```sh
+yarn gulp start
+```
+
+这时候会报 `No gulpfile found` 找不到 gulpfile 文件的错误。这边需要指定 gulp 的入口文件：
+
+```sh
+yarn gulp --gulpfile 'lib/index.js' start
+```
+
+这样就可以运行了，不过这样默认的打包目录是当前的项目，而这边的当前项目是构建工具项目，我们应该指定为项目工程目录：
+
+```sh
+yarn gulp --gulpfile 'lib/index.js' --cwd '项目目录' start
+```
+
+CLI 内容就是把这条命令行写进代码里，这段命令行其实就是去读取某个文件执行它。命令行 `yarn gulp` 其实是执行了 `node_modules/.bin/gulp` 文件，打开这个文件后你会发现他其实是执行了 gulp-cli ：
+
+```js
+require('gulp-cli')();
+```
+
+至于参数怎么传递，在 NodeJS 里面获取命令行参数是用 process.argv 获取，我们同样也可以 process.argv 去增加参数，可以通过 push 添加，最终的代码如下：
+
+```js
+#!/usr/bin/env node
+
+process.argv.push('--cwd')
+// 由于执行命令行是在项目工程目录下执行，
+// 所以我们可以通过 process.cwd() 获取项目工程路径
+process.argv.push(process.cwd())
+
+process.argv.push('--gulpfile')
+// require.resolve 查找文件路径
+// 传 .. 后就是回到当前项目根目录，根目录找不到 index.js ，
+// 就会去找 package.json 里面的 bin 所对应的文件
+process.argv.push(require.resolve('..'))
+
+require('gulp-cli')();
+```
+
+到这里 Gulp 工作流的封装就全部完成了。这时候就可以发布 npm 了，不过在发布前最好调试下，可以使用 `npm link` 注册模块，然后在项目里 `yjc-pages start` 使用模块。

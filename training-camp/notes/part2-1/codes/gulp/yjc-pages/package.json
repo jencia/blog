@@ -1,9 +1,17 @@
 {
   "name": "yjc-pages",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "bin": "bin/yjc-pages.js",
   "main": "lib/index.js",
   "license": "MIT",
+  "files": [
+    "lib",
+    "bin"
+  ],
+  "author": {
+    "name": "jencia",
+    "email": "1073956837@qq.com"
+  },
   "dependencies": {
     "@babel/core": "^7.10.4",
     "@babel/preset-env": "^7.10.4",
