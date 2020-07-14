@@ -305,3 +305,389 @@ return __webpack_require__(__webpack_require__.s = 0)
 
 ## 资源模块加载
 
+webpack 默认只能识别 JS 和 JSON 文件，对于资源文件（比如 css，png ）是无法识别的，例如我们这边加入一个 css 文件：
+
+```diff
+  ├─ src/
+  │   ├─ heading
++ │   ├─ main.css
+  │   └─ main.js
+  ├─ index.html
+  ├─ package.json
+  └─ webpack.config.js
+```
+
+main.css
+
+```css
+body {
+    margin: 0 auto;
+    padding: 0 20px;
+    max-width: 800px;
+    background: #f4f8fb;
+}
+```
+
+然后在 main.js 引入：
+
+```diff
+  import createHeading from './heading.js'
++ import './main.css'
+  
+  const heading = createHeading()
+  
+  document.body.append(heading)
+```
+
+这时候再打包会发现报错了，报了模块解析失败的错误。
+
+针对于非 JS 和 JSON 文件都需要设置加载器，webpack.config.js 应该改成这样：
+
+```diff
+const path = require('path')
+
+module.exports = {
+    entry: './src/main.js',
+    mode: 'none',
+    output: {
+        filename: 'bundle.js',
+        path: path.join(__dirname, 'dist')
+-   }
++   },
++   module: {
++       rules: [
++           {
++               test: /\.css$/,
++               use: [
++                   'style-loader',
++                   'css-loader'
++               ]
++           }
++       ]
++   }
+}
+```
+
+module 放模块相关配置，rules 专门用来配置加载器，在里面设置文件解析规则，每一项就是一个规则。
+
+test 传入正则表达式匹配文件名，这边写 `/\.css$/` 就代表匹配所有 .css 结尾的文件，匹配到的文件使用 use 指定的加载器去解析文件。
+
+use 单个加载器传入字符串，多个加载器传入字符串数组，每个元素代表一个加载器.
+
+**注意：use 的加载顺序是从后往前执行**
+
+这边用到了两个加载器，需要安装下依赖：
+
+```sh
+yarn add -D style-loader css-loader
+```
+
+每个加载器的职责单一，css-loader 是用来解析 css 文件，将文件内容转化为字符串。style-loader 是将这些 css 字符串添加到页面的 style 标签里面，从而完成 css 的引入。这时候再去打包就能正常打包进去了。
+
+## 文件资源加载器
+
+文件资源比如图片、字体，关于文件资源用到的加载器是 file-loader
+
+```sh
+yarn add -D file-loader
+```
+
+配置规则，这边以 png 文件为例：
+
+```js
+{
+    test: /\.png$/,
+    use: 'file-loader'
+}
+```
+
+这时候在代码里加载图片：
+
+main.js
+
+```diff
+  import createHeading from './heading.js'
+  import './main.css'
++ import icon from './demo.png'
+  
+  const heading = createHeading()
+  
+  document.body.append(heading)
+ 
++ const img = new Image()
++ 
++ img.src = icon
++ document.body.append(img);
+```
+
+然后去打包文件查看效果。这时候你会发现在页面上找不到图片，但实际图片是有生成到 dist 目录下的。查看图片的访问路径你会发现，其实是路径错了，图片是生成到 dist 目录下的，但是访问路径却是在项目根目录下查找。想要查看路径的生成方式，可以查看生成的代码：
+
+```js
+(function(module, __webpack_exports__, __webpack_require__) {
+    "use strict";
+    __webpack_require__.r(__webpack_exports__);
+    /* harmony default export */ __webpack_exports__["default"] = (__webpack_require__.p + "a82ccc877770d169d05ea0bf93263446.png");
+})
+```
+
+图片路径是将 `__webpack_require__.p` 的值与生成的文件名做拼接，这边 `__webpack_require__.p` 的值并没有设置，默认是空字符串，所以最终生成的图片路径是 `'a82ccc877770d169d05ea0bf93263446.png'` 而我们页面是在项目根目录打开的，也就会在项目根目录去找这张图片。想要解决这问题就是去设置 `__webpack_require__.p` 的值，这个值是在出口配置那边设置：
+
+```diff
+module.exports = {
+    ...
+    output: {
+        filename: 'bundle.js',
+        path: path.join(__dirname, 'dist'),
++       publicPath: 'dist/'
+    },
+    ...
+}
+```
+
+在 output 里配置 publicPath，注意这边的斜杆不能省略。这样再去重新打包就能成功显示图片了。
+
+## URL 加载器
+
+文件资源除了可以以物理文件的形式存在，还可以以 Data URLs 的形式存在。Data URLs 是一种特殊的 URL 协议，它可以用来直接表示一个文件，传统 URL 要求在服务器上有对应的文件，通过访问这个 URL 去读取到对应的文件。而 Data URLs 是当前 URL 就能表示全部文件内容的方式，它遵守着以下的格式：
+
+![](https://jencia.github.io/images/blog/training-camp/notes/Webpack-1.png)
+
+例如：
+
+```js
+data:text/html;charset=UTF-8,<h1>html content</h1>
+```
+
+浏览器能够将这样一串内容为一个 html 内容，编码采用 UTF-8，内容为 `<h1>html content</h1>`。
+
+如果是图片或者字体，这种无法通过文本去表示的二进制文件，可以通过对其内容进行 base64 编码，以编码后的结果（也就是一串字符串）来表示文件内容，例如：
+
+```js
+data:image/png;base64,iVBORw0KGgoAAAANSUhE...SuQmCC
+```
+
+在 webpack 打包资源模块时同样可以采用这种方式实现，通过 Data URLs 就可以以代码的形式表示任何类型的文件，具体做法是使用 url-loader 加载器，将之前的 file-loader 改成 url-loader：
+
+```sh
+yarn add -D url-loader
+```
+
+```diff
+{
+    test: /\.png$/,
+-   use: 'file-loader'
++   use: 'url-loader'
+}
+```
+
+这时候再去打包就不会生成图片文件，也能正常显示图片。这种方式就适合打包项目中体积比较小的文件，最佳实践就是：
+
+- 小文件使用 Data URLs，减少请求次数
+- 大文件单独提取存放，提高加载速度
+
+url-loader 支持通过配置来实现上述的最佳实践，配置就要改成这样：
+
+```diff
+{
+    test: /\.png$/,
+-   use: 'url-loader'
++   use: {
++       loader: 'url-loader',
++       options: {
++           limit: 10 * 1024
++       }
++   }
+}
+```
+
+加载器需要传递参数的时候 use 的值就要改成对象的形式，加载器放在 loader 里，而参数放在 options 里。limit 设置 `10 * 1024` 代表 10KB ，也就是说文件小于 10KB 采用 Data URLs 打包，超过 10KB 就采用 file-loader 的方式打包。
+
+**注意：使用 url-loader 的同时也要去安装 file-loader** ，超过 10KB 的时候 url-loader 内部会调用 file-loader。
+
+## ES6 编译
+
+webpack 默认不会去编译 ES6 代码，打开上一节打包后的代码：
+
+```js
+(function(module, __webpack_exports__, __webpack_require__) {
+    "use strict";
+    __webpack_require__.r(__webpack_exports__);
+    /* harmony default export */ __webpack_exports__["default"] = (() => {
+        const element = document.createElement('h2')
+
+        element.textContent = 'Hello world'
+        element.addEventListener('click', () => {
+            alert('hello webpack')
+        })
+
+        return element
+    });
+}),
+```
+
+打包后的代码还是能看到 const 和箭头函数，如果想要编译 ES6 代码需要配置编译加载器，常用的有 babel-loader。使用 babel-loader 还需要安装 babel 核心模块和 babel 插件：
+
+```sh
+yarn add -D babel-loader @babel/core @babel/preset-env
+```
+
+```js
+{
+    test: /\.js$/,
+    use: {
+        loader: 'babel-loader',
+        options: {
+            presets: ['@babel/preset-env']
+        }
+    }
+}
+```
+
+注意：这边要配置 presets ，否则不会去编译。配完之后再去打包：
+
+```js
+(function(module, __webpack_exports__, __webpack_require__) {
+    "use strict";
+    __webpack_require__.r(__webpack_exports__);
+    /* harmony default export */ __webpack_exports__["default"] = (function () {
+        var element = document.createElement('h2');
+        element.textContent = 'Hello world';
+        element.addEventListener('click', function () {
+            alert('hello webpack');
+        });
+        return element;
+    });
+})
+```
+
+这时候 es6 代码已经成功编译了。
+
+通常 babel 的配置不会放在 loader 里面配置，而是在项目根目录下创建 .babelrc 文件专门用来配置 babel：
+
+```json
+{
+    "presets": ["@babel/preset-env"]
+}
+```
+
+这时候 loader 就不需要传参数了，就可以改成这样了：
+
+```js
+{
+    test: /\.js$/,
+    use: 'babel-loader'
+}
+```
+
+这时候再去打包也能达到同样的效果。
+
+## 加载资源的方式
+
+webpack 加载模块不仅能用 import 加载，还能支持 require 。webpack 同时支持 ES Module、CommonJS、AMD 多种模块标准。
+
+```js
+// ES Module
+import createHeading from './heading.js'
+import './main.css'
+import icon from './demo.png'
+
+// CommonJS
+const createHeading = require('./heading.js').default   // 引入 JS 模块要取 default 值
+const icon = require('./demo.png')
+require('./main.css')
+
+// AMD
+require(['./heading.js', './demo.png', './main.css'], (createHeading, icon) => {
+    // ...
+})
+```
+
+虽然都能支持，但建议统一用同一种，这样更易于维护。
+
+除了这些 JS 加载器外，还有一些其他独立的加载器，例如：
+
+1. 样式代码中的 @import 指令和 url 函数
+
+```css
+@import url(reset.css)
+
+body {
+    min-height: 100vh;
+    background: #f4f8fb;
+    background-image: url(background.png);
+    background-size: cover;
+}
+```
+
+这边的加载了 reset.css 和 background.png ，这两个文件就会参与 webpack 打包，最后替换成打包后的路径。
+
+2. html 的 scr 属性
+
+```html
+<!-- footer.html -->
+<footer>
+    <img src="./demo.png">
+</footer>
+```
+
+```js
+import footer from './footer.html'
+
+const div = document.createElement('div');
+div.innerHTML = footer;
+document.body.append(div);
+```
+
+img 的 src 引用了 `./demo.png` ，这个文件也就会参与打包，最后替换为打包后的路径。
+
+这段代码还不能运行，这边引入了 html 文件，需要配置 html 的加载器：
+
+```sh
+yarn add -D html-loader
+```
+
+```js
+{
+    test: /\.html$/,
+    use: 'html-loader'
+}
+```
+
+以上是能够参与 webpack 打包的模块加载方式。当然也有些情况不会打包，比如 a 标签的 href 属性就不会。如果我把 footer.html 改成 a 标签的形式：
+
+```html
+<footer>
+    <a href="./demo.png">demo.png</a>
+</footer>
+```
+
+这里的 './demo.png' 就不会被 webpack 打包。打包后打开页面，这时候点击 a 标签会找不到图片。如果想要能支持 a 标签的 href 属性，可以在加载器上改配置：
+
+```js
+{
+    test: /\.html$/,
+    use: {
+        loader: 'html-loader',
+        options: {
+            attributes: {
+                list: [
+                    {
+                        tag: 'img',
+                        attribute: 'src',
+                        type: 'src'
+                    },
+                    {
+                        tag: 'a',           // 标签名
+                        attribute: 'href',  // 属性名
+                        type: 'src'
+                    }
+                ]
+            }
+        }
+    }
+}
+```
+
+默认能支持 img 标签的 src 属性，但如果配置了 attributes 属性就代表不使用默认配置，所以也要把 img 配上去。这样就是能支持 img 的 src 属性和 a 标签的 href 属性，没有配的就不会参与资源打包。
+
+
