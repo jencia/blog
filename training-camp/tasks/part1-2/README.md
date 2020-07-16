@@ -1,4 +1,4 @@
-# 模块二： ES新特性与TypeScript、JS 性能优化
+# 模块1-2： ES新特性与TypeScript、JS 性能优化
 
 ## 简答题
 

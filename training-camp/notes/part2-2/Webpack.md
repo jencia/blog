@@ -690,4 +690,23 @@ yarn add -D html-loader
 
 默认能支持 img 标签的 src 属性，但如果配置了 attributes 属性就代表不使用默认配置，所以也要把 img 配上去。这样就是能支持 img 的 src 属性和 a 标签的 href 属性，没有配的就不会参与资源打包。
 
+## 核心工作原理
+
+在项目开发中都会各自各样的文件散落各处
+
+![](https://jencia.github.io/images/blog/training-camp/notes/Webpack-2.png)
+
+webpack 工作的时候会根据配置选择一个文件作为打包入口，这个文件一般是 javascript 文件。
+
+![](https://jencia.github.io/images/blog/training-camp/notes/Webpack-3.png)
+
+然后顺着入口文件的代码往下走，检测文件代码有用到 import 或者 其他资源加载代码 （上一节讲到的加载资源方式），就会解析推断出文件所依赖的资源模块，然后分别解析每一个模块对应的依赖，最后就形成了整个项目模块所有用到的文件之间依赖关系的依赖树。
+
+![](https://jencia.github.io/images/blog/training-camp/notes/Webpack-4.png)
+
+生成依赖树之后，webpack 会遍历整个依赖树，找到每个节点对应的资源文件。然后根据配置文件中的 rules 属性找到每个模块的加载器，然后交给加载器去加载每个模块，最后再将这些加载到的结果放入到 bundle.js 也就是打包文件。
+
+![](https://jencia.github.io/images/blog/training-camp/notes/Webpack-5.png)
+
+从而完成整个项目的打包工作。
 
