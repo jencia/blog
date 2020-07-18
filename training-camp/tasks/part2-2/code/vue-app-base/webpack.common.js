@@ -30,13 +30,21 @@ module.exports = {
       },
       {
         test: /\.(png|jpg|jpeg)$/,
-        use: {
-          loader: 'url-loader',
-          options: {
-            limit: 10 * 1024,
-            esModule: false
+        use: [
+          {
+            loader: 'url-loader',
+            options: {
+              limit: 10 * 1024,
+              esModule: false
+            }
+          },
+          {
+            loader: 'image-webpack-loader',
+            options: {
+              disable: process.env.NODE_ENV !== 'production'
+            }
           }
-        }
+        ]
       },
       {
         test: /.(html|ejs)$/,
