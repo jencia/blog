@@ -1,0 +1,9 @@
+{
+  "name": "rollup-demo2",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "devDependencies": {
+    "rollup": "^2.22.0"
+  }
+}
