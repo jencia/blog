@@ -34,14 +34,6 @@ Plugin 开发思路：
 
 作业请看 [code/vue-app-base](./code/vue-app-base)
 
-具体任务及说明：
-
-先下载任务的基础代码  百度网盘链接: https://pan.baidu.com/s/1pJl4k5KgyhD2xo8FZIms8Q 提取码: zrdd
-
-这是一个使用 Vue CLI 创建出来的 Vue 项目基础结构
-
-有所不同的是这里我移除掉了 vue-cli-service（包含 webpack 等工具的黑盒工具）
-
-这里的要求就是直接使用 webpack 以及你所了解的周边工具、Loader、Plugin 还原这个项目的打包任务
-
-尽可能的使用上所有你了解到的功能和特性
+> 具体任务及说明：
+> 先下载任务的基础代码  百度网盘链接: https://pan.baidu.com/s/1pJl4k5KgyhD2xo8FZIms8Q 提取码: zrdd
+> 这是一个使用 Vue CLI 创建出来的 Vue 项目基础结构，有所不同的是这里我移除掉了 vue-cli-service（包含 webpack 等工具的黑盒工具），这里的要求就是直接使用 webpack 以及你所了解的周边工具、Loader、Plugin 还原这个项目的打包任务，尽可能的使用上所有你了解到的功能和特性
