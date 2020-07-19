@@ -1104,9 +1104,9 @@ console.log(generator.next());  // { value: undefined, done: true }
 
 ## ES Modules
 
-这块将在后续的模块化开发专题详细讲解
+移步至 [这里](../part2-2/ESModule.md)
 
-## ES2016 概述
+## ES2016
 
 ES2016 只加了两块内容，Array.prototype.includes 和指数运算符。
 
@@ -1143,7 +1143,7 @@ console.log(Math.pow(2, 10));   // 1024
 console.log(2 ** 10);   // 1024
 ```
 
-## ES2017 概述
+## ES2017
 
 ### Object.values
 
@@ -1242,3 +1242,269 @@ fn(4, 2, )
 ### Async/Await
 
 这一块放在异步编程专题里面讲，详情想看 [01-01/AsyncAwait.md](../01-01/AsyncAwait.md)
+
+## ES2018
+
+### Rest/Spread
+
+其实就是 ... 运算符的扩展，ES2015 只能在数组上运用，ES2018 提供了在对象上运用的支持，上述在 [对象的扩展](#对象的扩展) 里面有讲了。
+
+### 异步迭代
+
+新出了 `for…await…of` 的语法糖，就是在原本的 `for…of` 的基础上做了扩展，现在在 `for…of` 上也能支持 await 。
+
+```js
+var asyncIterable = {
+  [Symbol.asyncIterator]() {
+    return {
+      i: 0,
+      next() {
+        if (this.i < 3) {
+          return Promise.resolve({ value: this.i++, done: false });
+        }
+
+        return Promise.resolve({ done: true });
+      }
+    };
+  }
+};
+
+(async function() {
+   for await (num of asyncIterable) {
+     console.log(num);
+   }
+})();
+```
+
+实现迭代器原本是重写 Symbol.iterator 方法，这边需改成 Symbol.asyncIterator ，返回值改成传递 Promise 对象。 `for…await…of` 每遍历一个值都要等到 Promise 执行完成才执行下一个值。
+
+### Promise.prototype.finally()
+
+```js
+Promise.resolve('xxx')
+	.then(res => {
+  	// 成功
+  })
+	.catch(err => {
+  	// 失败
+	})
+	.finally(() => {
+  	// 不管成功还是失败都会执行
+	})
+```
+
+### 表达式改进
+
+```js
+/es(?=2018)/.test('es2018')		// 先行断言，es 后面紧跟上 2018
+/es(?!2019)/.test('es2018')		// 先行断言否定语句，es 后面紧跟上的不是 2019
+
+/(?<=es)2018/.test('es2018')	// 后行断言，2018 前面紧跟上 es
+/(?<!xx)2018/.test('es2018')	// 后行断言否定语句，2018 前面紧跟上的不是 xx
+
+/^\p{ASCII}+$/u.test('abc') 	// \p{} 匹配所有 ASCII 字符
+/^\p{ASCII_Hex_Digit}+$/u.test('14f')	// 匹配十六进制字符
+/^\p{Lowercase}+$/u.test('h')	// 匹配小写字符
+/^\p{Uppercase}$/u.test('H')	// 匹配大写字符
+/^\p{Emoji}+$/u.test('🙃')		// 匹配表情字符
+/^\p{Number}+$/u.test('⒉⑴①Ⅳ5') // 匹配数字字符
+/^\p{Alphabetic}+$/u.test('汉字和letter')	// 匹配汉字和字母，数字不算
+
+// 命令捕获组
+const re = /(?<year>\d{4})-(?<month>\d{2})-(?<day>\d{2})/
+const result = re.exec('2015-01-02')
+// result.groups.year === '2015'
+// result.groups.month === '01'
+// result.groups.day === '02'
+
+/hi.welcome/s.test('hi\nwelcome')	// 增加了 s 标记，试点号 . 可以匹配换行符
+```
+
+## ES2019
+
+### trimStart / trimEnd
+
+```js
+const str = ' Hello ES2019! '
+str.trim()			// 'Hello ES2019!' 原来清除两边的空白字符
+str.trimStart()	// 'Hello ES2019! ' 现在可以分别清除左边
+str.trimEnd()		// ' Hello ES2019!' 清除右边
+```
+
+### fromEntries
+
+```js
+const obj = { foo: 'bar' }
+const map = Object.entries(obj)	[['foo', 'bar']]	// 普通对象转为 Map 对象
+
+Object.fromEntries(map);	// { foo: 'bar' }，Map 对象转为普通对象
+```
+
+### flat / flatMap
+
+```js
+[1, 2, [3, 4]].flat() // [1, 2, 3, 4] 数组扁平化
+[1, 2, [3, [4, 5]]].flat(2) // [1, 2, 3, 4, 5]，指定扁平化 2 层深度
+
+// .map() 与 .flat() 结合使用，扁平化深度为 1
+[1, 2, [3, 4]].flatMap(v => {
+  if (typeof v === 'number') {
+    return v
+  } else {
+    return v.map(v => v * 2)
+  }
+})
+// [1, 2, 6, 8]
+```
+
+### catch 的参数改为可选
+
+```js
+const isValidJSON = json => {
+  try {
+    JSON.parse(json)
+    return true
+  } catch {	// 可以不传参数了
+    return false
+  }
+}
+```
+
+### sort() 更加稳定
+
+之前允许出现不稳定的排序算法，如快速排序，存在排序执行结果不固定的情况，在 ES2019 里改善了这个方法。
+
+## ES2020
+
+### 可选链运算法
+
+```js
+const obj = {}
+
+obj.name?.firstName
+obj.say?.()
+obj.age?.test?.()
+```
+
+使用 ?. 替代 . 去访问对象属性和方法，即使是 undefined 也不会报错了，最终会返回 undefined。
+
+### 空值合并算法
+
+```js
+0 || 'default value'					// default value
+'' || 'default value'					// default value
+false || 'default value'			// default value
+null || 'default value'				// default value
+undefined || 'default value'	// default value
+
+0 ?? 'default value'					// 0
+'' ?? 'default value'					// ''
+false ?? 'default value'			// false
+null ?? 'default value'				// default value
+undefined ?? 'default value'	// default value
+```
+
+空值合并算法其实就是双问号 ?? 语法，跟 || 很类似，右上述代码不一样的是 ?? 只有当前面的值是 null 或 undefined 时才会取后面的值，而 || 是前面值只要类型能转为 false 的都执行。
+
+### 标准化全局对象
+
+针对浏览器环境和 NodeJS 两个环境不一样全局变量的取值也不一样，所以 ES2020 出了一个兼容两种环境的全局变量 globalThis。之前要这样判断：
+
+```js
+const getGlobal = () => {
+  if (typeof self !== 'undefined') return self 			// WebWorker 环境
+  if (typeof window !== 'undefined') return window 	// 浏览器环境
+  if (typeof global !== 'undefined') return global  // NodeJS 环境
+  throw new Error('unable to locate global object') // 都找不到
+}
+const globals = getGlobal(); 
+```
+
+现在就只要直接用 globalThis 就好。
+
+### Promise.allSettled
+
+类似 Promise.all()，不同的是 Promise.all 只要有一个发生异常就直接进入 catch ，所有任务都挂掉。而 Promise.allSettled 会继续完所有任务后才返回结果.
+
+```js
+const promises = [
+    Promise.reject(111),
+    Promise.resolve(222)
+]
+
+Promise.all(promises)
+	.then(res => {
+    // 不会触发
+  })
+  .catch(err => {
+    console.log(err)	// 111
+  })
+
+Promise.allSettled(promises)
+	.then(res => {
+  	console.log(res)	// [{ status: 'rejected', reason: 111 }, { status: 'fulfilled', reason: 222 }]
+  })
+  .catch(() => {
+    // 不会触发
+  })
+```
+
+Promise.allSettled即使都是失败的也不会执行 catch ，都是执行 then
+
+### matchAll
+
+matchAll 的属于字符串的方法，matchAll 的出现是为了解决 match 开启全局匹配时捕捉组无法生效
+
+```js
+const str = 'my name is [name], age is [age]'
+const re = /\[(\w+)\]/g
+
+str.match(re)		// ["[name]", "[age]"]
+for (const item of str.matchAll(re)) {
+    console.log(item)
+    // ['[name]', 'name', index: 11, input: '...']
+    // ['[age]', 'age', index: 26, input: '...']
+}
+```
+
+### BigInt
+
+number 类型有一个安全范围的值是 `-2^53 - 1` 至 `2^53 - 1`，也就是 `Number.MIN_SAFE_INTEGER` 至 `Number.MAX_SAFE_INTEGER` ，超出安全范围就会丢失精度。BigInt 就是专门存放大型数字的。
+
+```js
+const bigNum1 = 23242342343434n // 在数字后面加 n
+const bigNum2 = BigInt(23242342343434) // 或者调用 BigInt 函数
+```
+
+需要注意的是 BigInt 跟 number 不同：
+
+```js
+0n === 0  // false  全等不相等
+1n + 2    // error  BigInt 和 number 不能进行运算
+
++1n          // error，不能使用 + 来转为number
+number(1n)  // 1
+```
+
+### 异步加载模块
+
+import() 方法成为标准了
+
+### 私有变量
+
+```js
+class Person {
+  name = 'tom'
+	#age = 25
+  say () {
+    console.log(`my name is ${this.name}, age is ${this.#age}`)
+	}
+}
+
+const person = new Person()
+
+person.say() // my name is tom, age is 25
+console.log(person.name)  // tom
+console.log(person.#age)  // error
+console.log({ ...person }) // { name: 'tom' }
+```
