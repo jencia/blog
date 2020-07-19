@@ -27,10 +27,12 @@ training-camp/
 - `2020-06-11` 正式开课，开课典礼
 - `2020-06-22` part1-1：函数式编程与 JS 异步编程、手写 Promise
 - `2020-07-01` part1-2：ES 新特性与 TypeScript、JS 性能优化
-- `2020-07-10` part2-1：开发脚手架及封装自动化构建工作流
+- `2020-07-10` part2-1：开发脚手架及封装自动化构建工作流（上）
+- `2020-07-17` part2-1：开发脚手架及封装自动化构建工作流（下）
 
 ## 笔记作业
 
 - part1-1：暂无笔记、[作业](./tasks/part1-1/README.md)
 - part1-2：[ECMAScript 新特性](./notes/part1-2/ECMAScript.md)、[TypeScript 语言](./notes/part1-2/TypeScript.md)、[JavaScript 性能优化](./notes/part1-2/Optimization.md)、[作业](./tasks/part1-2/README.md)
 - part2-1：[脚手架工具](./notes/part2-1/Scaffolding.md)、[Gulp](./notes/part2-1/Gulp.md)、[作业](./tasks/part2-1/README.md)
+- part2-2：[ES Module](./notes/part2-2/ESModule.md)、[Webpack](./notes/part2-2/Webpack.md)、[Rollup](./notes/part2-2/Rollup.md)、[ESLint](./notes/part2-2/ESLint.md)、[作业](./tasks/part2-2/README.md)

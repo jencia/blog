@@ -226,7 +226,7 @@ import fs from 'fs'
 例如：
 
 ```sh
-node --experimental-modules foo.mjs
+$ node --experimental-modules foo.mjs
 ```
 
 这样就能支持了。
@@ -242,7 +242,7 @@ node --experimental-modules foo.mjs
 运行命令行还是一样要加那个属性，例如
 
 ```sh
-node --experimental-modules foo.js
+$ node --experimental-modules foo.js
 ```
 
 不过这时候你想改成 CommonJS 规范的话，就会报错，这时候想要两种同时支持的话，就要将遵守 CommonJS 规范的文件后缀名改成 `.cjs` 。

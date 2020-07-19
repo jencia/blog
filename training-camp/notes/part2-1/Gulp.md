@@ -5,13 +5,13 @@
 1. 初始化项目
 
 ```sh
-yarn init --yes
+$ yarn init --yes
 ```
 
 2. 安装 gulp
 
 ```sh
-yarn add gulp --dev
+$ yarn add gulp --dev
 ```
 
 3. 在根目录创建 gulpfile.js
@@ -35,13 +35,13 @@ exports.foo = done => {
 yarn gulp + 任务名称
 
 ```sh
-yarn gulp foo
+$ yarn gulp foo
 ```
 
 如果是运行默认任务，也就是任务名 default 的话可以这样：
 
 ```sh
-yarn gulp
+$ yarn gulp
 ```
 
 没有默认任务也这样去运行，会去找第一个任务。
@@ -58,7 +58,7 @@ gulp.task('bar', done => {
 ```
 
 ```sh
-yarn gulp bar
+$ yarn gulp bar
 ```
 
 老项目可能都是用这种写法，使用 gulp.task 来创建任务。
@@ -365,13 +365,13 @@ exports.default = () => {
 开发过程中常常会使用一些预编译语言来提高样式开发效率和维护性，这边以 sass 为例，用到 sass 文件就需要编译。我们可以使用 gulp-sass 来编译，将 scss 文件编译为 css 文件。
 
 ```sh
-yarn add -D gulp-sass
+$ yarn add -D gulp-sass
 ```
 
 注意：这个插件依赖 node-sass ，安装会很慢。如果实在装不下就装下这个方案再重新安装：
 
 ```sh
-npm install -g mirror-config-china --registry=http://registry.npm.taobao.org
+$ npm install -g mirror-config-china --registry=http://registry.npm.taobao.org
 ```
 
 具体 gulp-sass 的使用如下：
@@ -395,7 +395,7 @@ const style = () => {
 这边的脚本指的就是 JS 文件，代码里使用了 ES6+ 的特性就需要编译才能兼容所有浏览器。一般编译 ES6+ 代码通常采用 babel 编译，而 gulp 提供了一个叫 gulp-babel 的插件。
 
 ```sh
-yarn add -D gulp-babel @babel/core @babel/preset-env
+$ yarn add -D gulp-babel @babel/core @babel/preset-env
 ```
 
 gulp-babel 底层会去调用 babel ，所以需要安装 @babel/core 这个 babel 核心库。不过这只是个平台，真正起作用的是 babel 插件，这边使用一个插件集 @babel/preset-env 。
@@ -416,7 +416,7 @@ const script = () => {
 通常为了提高页面代码的通用性，都会采用模板引擎去开发页面。在模板文件里做插值操作，再通过外界传入的参数来展示不同的代码。页面模板引擎需要编译才能将值插入到模板里。这个示例项目使用的是 swig 语法，所以我们需要安装 gulp-swig 。
 
 ```sh
-yarn add -D gulp-swig
+$ yarn add -D gulp-swig
 ```
 
 ```js
@@ -436,7 +436,7 @@ const page = () => {
 图片和字体通常作为资源文件的存在，这种一般浏览器本身就已经支持的，能做的处理也就只有压缩文件。通过文件压缩减小总体资源文件的体积，从何提高网页的访问速度。不过文件压缩应该属于无损压缩，肉眼看不出压缩后的变化，这边使用 gulp-imagemin 。
 
 ```sh
-yarn add -D gulp-imagemin
+$ yarn add -D gulp-imagemin
 ```
 
 注意：这个插件依赖二进制文件，安装的时候很慢。
@@ -470,7 +470,7 @@ const extra = () => {
 每次编译的时候都只是往 dist 目录里加文件，时间久了里面就会掺杂一些不需要的文件，所以我们应该每次编译的时候都先去清除 dist 目录，这边引入了一个 del 模块：
 
 ```sh
-yarn add -D del
+$ yarn add -D del
 ```
 
 ```js
@@ -508,7 +508,7 @@ const imagemin = require('gulp-imagemin')
 后续还会用到更多的插件，每次都这样引入很麻烦，也不利于后续的维护。gulp 提供了一个自动引入的插件：
 
 ```sh
-yarn add -D gulp-load-plugins
+$ yarn add -D gulp-load-plugins
 ```
 
 ```js
@@ -526,7 +526,7 @@ plugins.imagemin
 以前传统的开发方式是代码写完后还需要手动到浏览器上刷新下页面才能看到最新效果，每次改完想看效果都要手动刷新页面，这很繁琐，开发体验很差。前端发展到工程化后就有了一个叫热更新的东西，修改代码浏览器会自动刷新，可以实时看到最新效果，这可以大大提高工作效率。热更新需要搭建一个前端服务器，现在市面上已经有很多这种插件，这边我们使用 browserSync 。
 
 ```sh
-yarn add -D browser-sync
+$ yarn add -D browser-sync
 ```
 
 ```js
@@ -661,7 +661,7 @@ const serve = () => {
 在 link 和 script 代码周围存在 build:css 、endbuild:css 的代码，其实这是转换后做的一个标记，这么我们还需要借助 gulp-useref ，它可将标记内的引用路径合并成一个文件，并且根据标记的文件路径生成文件。
 
 ```sh
-yarn add -D gulp-useref
+$ yarn add -D gulp-useref
 ```
 
 ```js
@@ -692,7 +692,7 @@ const useref = () => {
 所以这边需要状 4 个插件：
 
 ```sh
-yarn add -D gulp-if gulp-uglify gulp-clean-css gulp-htmlmin
+$ yarn add -D gulp-if gulp-uglify gulp-clean-css gulp-htmlmin
 ```
 
 ```js
@@ -961,7 +961,7 @@ bin/yjc-pages.js
 如果是 Linux 或 MacOS系统 需要执行以下命令行
 
 ```sh
-chmod 755 bin/yjc-pages.js
+$ chmod 755 bin/yjc-pages.js
 ```
 
 4. 编写 CLI 内容
@@ -969,19 +969,19 @@ chmod 755 bin/yjc-pages.js
 在编写 CLI 内容前，我们要先知道这边应该怎么执行 Gulp ，如果是按照以往的方式：
 
 ```sh
-yarn gulp start
+$ yarn gulp start
 ```
 
 这时候会报 `No gulpfile found` 找不到 gulpfile 文件的错误。这边需要指定 gulp 的入口文件：
 
 ```sh
-yarn gulp --gulpfile 'lib/index.js' start
+$ yarn gulp --gulpfile 'lib/index.js' start
 ```
 
 这样就可以运行了，不过这样默认的打包目录是当前的项目，而这边的当前项目是构建工具项目，我们应该指定为项目工程目录：
 
 ```sh
-yarn gulp --gulpfile 'lib/index.js' --cwd '项目目录' start
+$ yarn gulp --gulpfile 'lib/index.js' --cwd '项目目录' start
 ```
 
 CLI 内容就是把这条命令行写进代码里，这段命令行其实就是去读取某个文件执行它。命令行 `yarn gulp` 其实是执行了 `node_modules/.bin/gulp` 文件，打开这个文件后你会发现他其实是执行了 gulp-cli ：

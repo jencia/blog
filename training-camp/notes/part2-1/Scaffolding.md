@@ -9,13 +9,13 @@
 1. 全局安装 yo
 
 ```sh
-yarn global add yo
+$ yarn global add yo
 ```
 
 2. 全局安装对应的 generator
 
 ```sh
-yarn global add generator-node
+$ yarn global add generator-node
 ```
 
 3. 通过 yo 运行 generator
@@ -23,7 +23,7 @@ yarn global add generator-node
 创建一个项目目录，进入项目目录后执行下面命令：
 
 ```sh
-yo node
+$ yo node
 ```
 
 这时候出现一系列问答对话：
@@ -68,7 +68,7 @@ yo node
 有些 generator 有提供一些子命令，例如 node:cli ，在之前的操作基础上再执行这个命令：
 
 ```sh
-yo node:cli
+$ yo node:cli
 ```
 
 这时候出现一条对话：
@@ -85,15 +85,15 @@ conflict package.json
 这个 cli.js 就是 my-module 向外暴露的命令行工具，本地想调试的话可以执行以下命令：
 
 ```sh
-yarn link
+$ yarn link
 # 或者
-npm link
+$ npm link
 ```
 
 如果使用 yarn 可能会出现 link 成功了，但实际却不能使用，这时候你需要执行这这条命令：
 
 ```sh
-yarn global bin
+$ yarn global bin
 ```
 
 注册到全局 bin 上面，这时候再重新 link 就可以了。
@@ -103,7 +103,7 @@ yarn global bin
 这时候就可以直接使用项目名作为命令行工具使用：
 
 ```sh
-my-module --help
+$ my-module --help
 ```
 
 ### 常规使用步骤
@@ -118,9 +118,9 @@ my-module --help
 比如我们需要开发 webapp ，那我们就可以到官网搜索 webapp 找到了名字叫 webapp ，对应的模块就是在前面加上 `generator-` , 也就是 `generator-webapp` ，然后安装流程就如下：
 
 ```sh
-yarn global add generator-webapp
+$ yarn global add generator-webapp
 # 找个地方创建项目目录，然后进入该目录再进行下一步
-yo webapp
+$ yo webapp
 ```
 
 ### 自定义 Generator
@@ -162,14 +162,14 @@ generator-<name>
 1. 创建 generator-sample 文件夹，并进入文件夹
 
 ```sh
-mkdir generator-sample
-cd generator-sample
+$ mkdir generator-sample
+$ cd generator-sample
 ```
 
 2. 初始化项目配置
 
 ```sh
-yarn init --yes
+$ yarn init --yes
 ```
 
 3. 安装 yeoman-generator
@@ -177,7 +177,7 @@ yarn init --yes
 这个模块是一个 generator 的基类，它提供了一些工具函数。
 
 ```sh
-yarn add yeoman-generator
+$ yarn add yeoman-generator
 ```
 
 4. 创建入口文件
@@ -218,13 +218,13 @@ module.exports = class extends Generator {
 在发布之前我们需要先在本地环境测下，可以借助 link 命令：
 
 ```sh
-yarn link
+$ yarn link
 ```
 
 如果确定没问题了就可以发布，发布模块就是跟发布普通模块没什么区别
 
 ```sh
-yarn publish
+$ yarn publish
 ```
 
 发布前得先 `npm login` 登录，检查 package.json 配置是否正确，比如 version、author。还得先
@@ -236,7 +236,7 @@ yarn publish
 首先需要把我们写的 generator 模块安装到全局上，如果是用 link 的就不用了。然后创建一个新的项目，执行以下命令：
 
 ```sh
-yo sample
+$ yo sample
 ```
 
 这时候这个项目下就会生成一个 temp.txt 文件，如果是这情况就代表成功了。
@@ -337,7 +337,7 @@ prompting () {
 1. 将plop模块作为项目开发依赖安装
 
 ```sh
-yarn add -D plop
+$ yarn add -D plop
 ```
 
 2. 在项目根目录下创建一个 plopfile.js 文件
@@ -391,7 +391,7 @@ export default {{name}};
 yarn plop + 任务名称，这边 component 任务，所以命令行是：
 
 ```sh
-yarn plop component
+$ yarn plop component
 ```
 
 ## 脚手架的工作原理
@@ -410,7 +410,7 @@ yarn plop component
 2. 初始化项目配置
 
 ```sh
-yarn init --yes
+$ yarn init --yes
 ```
 
 3. 设置 bin 入口文件
@@ -446,14 +446,14 @@ Node CLI 应用入口文件必须要有这样的文件头。
 如果是 Linux 或者 macOS 系统下还需要修改此文件的读写权限为 755，修改命令是执行以下命令
 
 ```sh
-chmod 755 cli.js
+$ chmod 755 cli.js
 ```
 
 5. cli 测试
 
 ```sh
-npm link
-my-cli
+$ npm link
+$ my-cli
 ```
 
 如果这时候有打印出 `cli working!` 就环境搭建成功。
@@ -463,7 +463,7 @@ my-cli
 这边需要用到 inquirer 工具
 
 ```sh
-yarn add -D inquirer
+$ yarn add -D inquirer
 ```
 
 给 cli.js 添加代码
@@ -499,7 +499,7 @@ Project name ?
 读文件可以使用模板引擎 ejs 。
 
 ```sh
-yarn add -D ejs
+$ yarn add -D ejs
 ```
 
 而生成文件其实就是写文件，可以使用 Node API 的 fs 模块来实现。

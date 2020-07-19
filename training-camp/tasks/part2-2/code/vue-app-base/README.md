@@ -5,33 +5,33 @@
 1. 安装依赖
 
 ```sh
-yarn
+$ yarn
 # or 
-npm install
+$ npm install
 ```
 
 2. 启动项目
 
 ```sh
-yarn serve
+$ yarn serve
 # or
-npm run serve
+$ npm run serve
 ```
 
 3. 打包前检查 ESLint
 
 ```sh
-yarn lint
+$ yarn lint
 # or
-npm run lint
+$ npm run lint
 ```
 
 4. 项目编译打包
 
 ```sh
-yarn build
+$ yarn build
 # or
-npm run build
+$ npm run build
 ```
 
 生成的 dist 目录就是编译后的文件目录。

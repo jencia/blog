@@ -5,25 +5,25 @@
 1. 安装依赖
 
 ```sh
-yarn
+$ yarn
 # or 
-npm install
+$ npm install
 ```
 
 2. 启动项目
 
 ```sh
-yarn start
+$ yarn start
 # or
-npm run start
+$ npm run start
 ```
 
 3. 项目编译打包
 
 ```sh
-yarn build
+$ yarn build
 # or
-npm run build
+$ npm run build
 ```
 
 生成的 dist 目录就是编译后的文件目录。

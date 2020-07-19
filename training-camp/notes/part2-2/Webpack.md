@@ -1,4 +1,4 @@
-# Webpack 打包
+# Webpack
 
 ## 快速上手
 
@@ -57,19 +57,19 @@ index.html
 初始化配置
 
 ```sh
-yarn init --yes
+$ yarn init --yes
 ```
 
 ### 2. 安装 webpack
 
 ```sh
-yarn add webpack webpack-cli --dev
+$ yarn add webpack webpack-cli --dev
 ```
 
 ### 3. 运行 webpack
 
 ```sh
-yarn webpack
+$ yarn webpack
 ```
 
 执行后默认会以 `src/index.js` 为入口文件进行打包。默认打包到 `dist/main.js` 。
@@ -379,7 +379,7 @@ use 单个加载器传入字符串，多个加载器传入字符串数组，每�
 这边用到了两个加载器，需要安装下依赖：
 
 ```sh
-yarn add -D style-loader css-loader
+$ yarn add -D style-loader css-loader
 ```
 
 每个加载器的职责单一，css-loader 是用来解析 css 文件，将文件内容转化为字符串。style-loader 是将这些 css 字符串添加到页面的 style 标签里面，从而完成 css 的引入。这时候再去打包就能正常打包进去了。
@@ -389,7 +389,7 @@ yarn add -D style-loader css-loader
 文件资源比如图片、字体，关于文件资源用到的加载器是 file-loader
 
 ```sh
-yarn add -D file-loader
+$ yarn add -D file-loader
 ```
 
 配置规则，这边以 png 文件为例：
@@ -469,7 +469,7 @@ data:image/png;base64,iVBORw0KGgoAAAANSUhE...SuQmCC
 在 webpack 打包资源模块时同样可以采用这种方式实现，通过 Data URLs 就可以以代码的形式表示任何类型的文件，具体做法是使用 url-loader 加载器，将之前的 file-loader 改成 url-loader：
 
 ```sh
-yarn add -D url-loader
+$ yarn add -D url-loader
 ```
 
 ```diff
@@ -528,7 +528,7 @@ webpack 默认不会去编译 ES6 代码，打开上一节打包后的代码：
 打包后的代码还是能看到 const 和箭头函数，如果想要编译 ES6 代码需要配置编译加载器，常用的有 babel-loader。使用 babel-loader 还需要安装 babel 核心模块和 babel 插件：
 
 ```sh
-yarn add -D babel-loader @babel/core @babel/preset-env
+$ yarn add -D babel-loader @babel/core @babel/preset-env
 ```
 
 ```js
@@ -643,7 +643,7 @@ img 的 src 引用了 `./demo.png` ，这个文件也就会参与打包，最后
 这段代码还不能运行，这边引入了 html 文件，需要配置 html 的加载器：
 
 ```sh
-yarn add -D html-loader
+$ yarn add -D html-loader
 ```
 
 ```js

@@ -57,7 +57,7 @@ export default {
 ### 安装
 
 ```sh
-yarn add -D rollup
+$ yarn add -D rollup
 ```
 
 ### 使用
@@ -65,13 +65,13 @@ yarn add -D rollup
 > rollup 版本 2.22.0
 
 ```sh
-yarn rollup src/index.js
+$ yarn rollup src/index.js
 ```
 
 执行命令行时需要指定入口文件，默认执行结果不会输出到文件里，而是打印到控制台，想输出到文件里可传入参数。
 
 ```sh
-yarn rollup src/index.js --file dist/bundle.js
+$ yarn rollup src/index.js --file dist/bundle.js
 ```
 
 这时候执行后就能看到 dist/bundle.js 文件，打开文件：
@@ -112,13 +112,13 @@ export default {
 rollup 也是运行在 NodeJS 环境的，但是配置文件会经过特殊处理，让我们能够只是使用 ES Module 规范。配置文件需要将对象作为默认成员导出，input 作为入口的输入文件，output 作为输出配置，file 指定具体文件路径。
 
 ```sh
-yarn rollup --config
+$ yarn rollup --config
 ```
 
 rollup 执行命令的时候传 --config 表示要使用配置文件，默认会去引用 rollup.config.js 文件。如果你的配置文件名称不叫这个可以指定配置文件：
 
 ```sh
-yarn rollup --config xx.js
+$ yarn rollup --config xx.js
 ```
 
 rollup 默认打包会以 ES Module 的格式打包，这种文件在浏览器上运行会有兼容性问题，通常在浏览器运行的代码都是采用 IIFE（自执行函数）格式，对应的配置：
@@ -150,7 +150,7 @@ rollup 跟 webpack 一样同样拥有插件机制，rollup 本身的功能就只
 rollup 默认只支持 js 文件的加载，如果我们要加载其他文件，比如 JSON 文件就需要使用插件，这边就以 JSON 为例。
 
 ```sh
-yarn add -D rollup-plugin-json
+$ yarn add -D rollup-plugin-json
 ```
 
 ```diff
@@ -225,7 +225,7 @@ import _ from 'lodash-es'
 这种写法是无法拿到值的，执行的时候会出现警告说找不到文件。想要读取第三方的模块，需要使用插件支持，这边推荐 rollup-plugin-node-resolve
 
 ```sh
-yarn add -D rollup-plugin-node-resolve
+$ yarn add -D rollup-plugin-node-resolve
 ```
 
 ```diff

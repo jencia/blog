@@ -203,7 +203,7 @@ function sum (a, b) {
 1. 初始化项目工程，这边使用 [yarn](https://classic.yarnpkg.com/zh-Hans/docs/install#windows-stable) 。
 
 ```sh
-yarn init --yes
+$ yarn init --yes
 ```
 
 这时候在你的项目工程下就有一个 package.json 文件
@@ -211,13 +211,13 @@ yarn init --yes
 2. 安装 flow-bin
 
 ```sh
-yarn add flow-bin --dev
+$ yarn add flow-bin --dev
 ```
 
 3. 初始化 flow
 
 ```sh
-yarn flow init
+$ yarn flow init
 ```
 
 这时候项目工程下会有个 `.flowconfig` 文件，到这里 flow 的环境就搭建完了。
@@ -246,7 +246,7 @@ flow 增加了类型注解的写法，也就是在参数名后面跟上冒号（
 5. 校验
 
 ```sh
-yarn flow
+$ yarn flow
 ```
 
 执行完命令行后，如果检测到类型错误就会显示出详细的错误信息，还有对应的文件跟代码行数，我们就可以根据上面的错误信息改正代码的错误。
@@ -262,13 +262,13 @@ yarn flow
 1. 安装
 
 ```sh
-yarn add flow-remove-types --dev
+$ yarn add flow-remove-types --dev
 ```
 
 2. 使用
 
 ```sh
-yarn flow-remove-types . -d dist
+$ yarn flow-remove-types . -d dist
 ```
 
 我们的代码放在当前目录，所以路径使用 "."，这段命令的意思就是讲当前路径下的文件全部移除注解，并把移除会的代码文件放在 dist 目录下。
@@ -280,7 +280,7 @@ yarn flow-remove-types . -d dist
 那命令行就应该改成这样：
 
 ```sh
-yarn flow-remove-types src -d dist
+$ yarn flow-remove-types src -d dist
 ```
 
 #### babel
@@ -290,7 +290,7 @@ yarn flow-remove-types src -d dist
 1. 安装
 
 ```sh
-yarn add @babel/core @babel/cli @babel/preset-flow --dev
+$ yarn add @babel/core @babel/cli @babel/preset-flow --dev
 ```
 
 - @babel/core 是 babel 的核心库
@@ -312,7 +312,7 @@ yarn add @babel/core @babel/cli @babel/preset-flow --dev
 3. 使用
 
 ```sh
-yarn babel src -d dist
+$ yarn babel src -d dist
 ```
 
 最终的效果跟 flow-remove-types 一样，只是转化后的代码更优，没有多余的空格。
@@ -485,7 +485,7 @@ TypeScript = JavaScript + 类型系统 + ES6+新特性
 1. 初始化项目工程。
 
 ```sh
-yarn init --yes
+$ yarn init --yes
 ```
 
 这时候在你的项目工程下就有一个 package.json 文件。
@@ -493,7 +493,7 @@ yarn init --yes
 2. 安装 typescript
 
 ```sh
-yarn add typescript --dev
+$ yarn add typescript --dev
 ```
 
 3. 编码
@@ -511,7 +511,7 @@ hello('TypeScript');    // Hello, TypeScript
 4. 编译
 
 ```sh
-yarn tsc demo1.ts
+$ yarn tsc demo1.ts
 ```
 
 这时候 demo1.ts 旁边多了一个 demo1.js 文件，这就是编译后的文件，它会将 ts 文件类型注解代码移除，并转化成 es3 代码。
@@ -521,7 +521,7 @@ yarn tsc demo1.ts
 tsc 提供了一个快速生成配置文件的命令：
 
 ```sh
-yarn tsc --init
+$ yarn tsc --init
 ```
 
 这时候项目工程下会生成一个 tsconfig.json 文件，这就是 ts 的配置文件。这个配置文件是作用于整个项目工程的，下列简单介绍下几项配置。
@@ -543,13 +543,13 @@ yarn tsc --init
 如果像上一节那样指定文件编译就不会走配置文件，要使用配置文件的话，命令行代码就要改成这样：
 
 ```sh
-yarn tsc
+$ yarn tsc
 ```
 
 如果想显示中文的错误信息，可以这样写:
 
 ```sh
-yarn tsc --locale zh-CN
+$ yarn tsc --locale zh-CN
 ```
 
 在 VSCode 设置中文的话可以在设置里面搜索 “typescript locale” 就能找到。
