@@ -1,16 +1,12 @@
 {
   "name": "demo2",
   "version": "1.0.0",
-  "description": "",
   "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "dependencies": {
-    "lodash": "^4.17.19"
-  },
-  "devDependencies": {}
+  "license": "MIT",
+  "devDependencies": {
+    "html-loader": "^1.1.0",
+    "marked": "^1.1.1",
+    "webpack": "^4.43.0",
+    "webpack-cli": "^3.3.12"
+  }
 }

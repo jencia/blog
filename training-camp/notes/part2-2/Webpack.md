@@ -710,3 +710,375 @@ webpack 工作的时候会根据配置选择一个文件作为打包入口，这
 
 从而完成整个项目的打包工作。
 
+## 开发一个 Loader
+
+前面的讲解用到了大量的 Loader ，Loader 作为 Webpack 的核心机制，为我们做了很多事情。那么 Loader 到底是怎么工作的呢？下列通过开发一个自己的 Loader 来了解 Loader 的工作原理。
+
+我们这个 Loader 的需求是加载 md 文件，取名叫 markdown-loader 。Loader 其实就是一个纯函数，一个输入一个输出，简单处理就是这样：
+
+```js
+module.exports = source => {
+    return source
+}
+```
+
+接收的参数为源文件内容，经过一系列处理后输出出来。不过就这样去使用会报错的，Loader 还有一个规则。
+
+![](https://jencia.github.io/images/blog/training-camp/notes/Webpack-6.png)
+
+Loader 的加载就类似一个管道一样，从源文件到输出结果，中间可以加载多个 Loader 。每个 Loader 的输入都是前一个 Loader 的输出，也就是每个 Loader 接收到的参数都是前一个 Loader 的返回值。第一个 Loader 收到的是源代码，最后一个输出的是最终的结果代码。而结果代码一定是要 JS 能够识别的内容。
+
+上述代码中如果读取的是 md 文件，那 source 的值 md 的代码，在 JS 中无法识别，直接作为返回值输出会报错，你可以这样改：
+
+```js
+module.exports = source => {
+    return JSON.stringify(source)
+}
+```
+
+这样输出的就是一串字符串了，这样就能被 JS 识别，这就是一个最基本的 Loader，就可以拿来使用了：
+
+webpack.config.js
+
+```js
+module.exports = {
+    mode: 'none',
+    module: {
+        rules: [
+            {
+                test: /\.md$/,
+                use: './markdown-loader'
+            }
+        ]
+    }
+}
+```
+
+这边 Loader 的使用加了 `./` 是因为 markdown-loader.js 是写在本地的，use 使用 Loader 就跟 require 一样，类似 `require('./markdown-loader')` 的操作。这样配好 webpack 配置就可以去测试功能了，由于这边没有配 entry ，所以入口文件是默认的，我们这里建一个 `src/index.js` 文件。
+
+```js
+import md from './test.md'
+
+console.log(md)
+```
+
+`src/test.md`
+
+```md
+# 标题1
+
+段落
+
+- 列表
+```
+
+最终 `src/test.md` 文件打包出来的结果是这样：
+
+```js
+/* 1 */
+/***/ (function(module, exports) {
+
+"# 标题\n\n段落\n\n- 列表"
+
+/***/ })
+```
+
+成功将 md 的内容转成字符串输出出来，但仔细观察会发现，这文件就只是一串字符串，并没有将内容导出，这样外界无法拿到这里的内容。所以我们的 Loader 还需要做个调整：
+
+```js
+module.exports = source => {
+    return `export default ${JSON.stringify(source)}`
+}
+```
+
+改完后再去打包：
+
+```js
+/* 1 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony default export */ __webpack_exports__["default"] = ("# 标题\n\n段落\n\n- 列表");
+
+/***/ })
+```
+
+现在的结果才是对的，到这里，一个最基本的 Loader 就算完成了。不过现在这个 Loader 只是做了将源码输出，没有任何功能，接下来就要给 Loader 赋予功能了。
+
+这边可以借助第三方库去解析 md 内容，这边推荐用 marked。
+
+```sh
+$ yarn add -D marked
+```
+
+```js
+const marked = require('marked');
+
+module.exports = source => {
+    const html = marked(source)
+    
+    return `export default ${JSON.stringify(html)}`
+}
+```
+
+这时候再去打包：
+
+```js
+/* 1 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony default export */ __webpack_exports__["default"] = ("<h1 id=\"标题\">标题</h1>\n<p>段落</p>\n<ul>\n<li>列表</li>\n</ul>\n");
+
+/***/ })
+```
+
+可以看到 md 内容已经成功转化为 html 代码了，解析 md 文件其实就是把内容转为 html 代码，到这里我们的 markdown-loader 就算大功告成了。
+
+以上演示的是独立一个 Loader 就完成了功能的用法，我们也可以结合其他 Loader 一起使用。既然解析 md 最终是生成 html 代码，那我们就可以把这些 html 代码交给 html-loader 处理。这时候 html-loader 就是管道的最后一层了，我们的 markdown-loader 就不需要转成字符串了，就可以这样改：
+
+```sh
+$ yarn add -D html-loader
+```
+
+markdown-loader.js
+
+```diff
+const marked = require('marked');
+
+module.exports = source => {
+    const html = marked(source)
+    
+-   return `export default ${JSON.stringify(html)}`
++   return html
+}
+```
+
+webpack.config.js
+
+```diff
+module.exports = {
+    mode: 'none',
+    module: {
+        rules: [
+            {
+                test: /\.md$/,
+-               use: './markdown-loader'
++               use: ['html-loader', './markdown-loader']
+            }
+        ]
+    }
+}
+```
+
+这样也能达到同样的效果。注意 use 的加载顺序是从后往前执行，最先执行的应该让最后面。
+
+## 插件机制
+
+插件机制是 Webpack 的另外一个核心机制，目的是为了增加 Webpack 自动化能力。Loader 专注于实现资源模块加载，Plugin 解决除了资源加载以外的自动化工作。比如：
+
+- 清理 dist 目录
+- 拷贝静态文件至输出目录
+- 压缩输出代码
+- etc.
+
+### clean-webpack-plugin
+
+自动清除 dist 目录
+
+```sh
+$ yarn add -D clean-webpack-plugin
+```
+
+```js
+const { CleanWebpackPlugin } = require('clean-webpack-plugin')
+
+module.exports = {
+    // ...
+    plugins: [
+        new CleanWebpackPlugin()
+    ]
+}
+```
+
+### html-webpack-plugin
+
+自动生成 HTML
+
+```sh
+$ yarn add -D html-webpack-plugin
+```
+
+- 基本使用
+
+```js
+const HTMLWebpackPlugin = require('html-webpack-plugin')
+
+module.exports = {
+    // ...
+    plugins: [
+        new HTMLWebpackPlugin()
+    ]
+}
+```
+
+- 设置标题和 meta
+
+```js
+new HTMLWebpackPlugin({
+    title: '标题',
+    meta: {
+        viewport: 'width=device-width'
+    }
+})
+```
+
+- 使用模板文件
+
+`src/index.html`
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Webpack</title>
+</head>
+<body>
+    <div class="container">
+        <h1><%= htmlWebpackPlugin.options.title %></h1>
+    </div>
+</body>
+</html>
+```
+
+```js
+new HTMLWebpackPlugin({
+    title: '标题',
+    meta: {
+        viewport: 'width=device-width'
+    },
+    template: './src/index.html'
+})
+```
+
+- 输出多个 html 文件
+
+```js
+module.exports = {
+    // ...
+    plugins: [
+        new HTMLWebpackPlugin({
+            filename: 'page1.html'
+        }),
+        new HTMLWebpackPlugin({
+            filename: 'page2.html'
+        }),
+        new HTMLWebpackPlugin({
+            filename: 'page3.html'
+        })
+    ]
+}
+```
+
+### copy-webpack-plugin
+
+拷贝目录文件
+
+```sh
+$ yarn add -D copy-webpack-plugin
+```
+
+> copy-webpack-plugin 版本号 6.0.3
+
+```js
+const CopyWebpackPlugin = require('copy-webpack-plugin')
+
+module.exports = {
+    // ...
+    plugins: [
+        new CopyWebpackPlugin({
+            patterns: [
+                { from: 'public' }
+            ]
+        })
+    ]
+```
+
+将 public 目录下所有文件拷贝到 dist 目录。
+
+## 开发一个 Plugin
+
+相比于 Loader，Plugin 拥有更宽的能力范围。Loader 只有在加载模块的时候工作，而 Plugin 触及到 Webpack 工作的每一个环节。
+
+Plugin 通过钩子机制实现，Webpack 给每个工作环节都埋下了钩子，Plugin 通过在钩子上挂载各种各样的任务来扩展 Webpack 的能力。具体有哪些钩子可以查看 [官网的 Compiler Hooks](https://webpack.js.org/api/compiler-hooks/) 。
+
+Webpack 要求我们插件一定要是一个函数或者是一个包含 apply 方法的对象，一般我们都是定义一个类，然后在类上定义一个 apply 方法。
+
+```js
+class MyPlugin {
+    apply (compiler) {
+        console.log('MyPlugin 启动')
+    }
+}
+```
+
+apply 接收一个参数 compiler，compiler 包含此次构建的所有配置信息。这边简单的做一个功能：
+
+1. 先明确需求，我们要把生成的 bundle.js 文件里面的所有注释信息去掉；
+2. 查找官网文档查找有没有合适的钩子，经过查阅找到了 emit 钩子，这钩子是在即将输出文件时执行，很适合我们的需求
+3. 注册钩子
+    
+    ```js
+    class MyPlugin {
+        apply (compiler) {
+            // compiler.hooks.emit 是对应的钩子
+            // .tap 是在这个钩子上挂载任务
+            // 第一个参数是插件名称，第二个是执行函数
+            compiler.hooks.emit.tap('MyPlugin', compilation => {
+                // ccompilation 是此次打包的上下文
+            })
+        }
+    }
+    ```
+4. 重写文件内容
+
+    ```js
+    class MyPlugin {
+        apply (compiler) {
+            compiler.hooks.emit.tap('MyPlugin', compilation => {
+                // compilation.assets 是所有导出的文件数据
+                for (const name in compilation.assets) {
+
+                    // name 是文件名，匹配 .js 后缀的文件，指处理 js 文件
+                    if (/\.js$/.test(name)) {
+                        // .source() 是获取文件内容
+                        const content = compilation.assets[name].source();
+                        // 去除文件内容里注释部分
+                        const result = content.replace(/\/\*\*+\*\//g, '')
+
+                        // 覆盖原来的值，要自己实现 source 和 size 方法
+                        compilation.assets[name] = {
+                            source: () => result,
+                            size: () => result.length
+                        }
+                    }
+                }
+            })
+        }
+    }
+    ```
+
+5. 插件使用
+
+    ```js
+    module.exports = {
+        // ...
+        plugins: [
+            new MyPlugin()
+        ]
+    }
+    ```
+
