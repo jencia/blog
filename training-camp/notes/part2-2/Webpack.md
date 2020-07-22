@@ -186,15 +186,15 @@ document.body.append(heading)
 + })
 ```
 
-#### 第一行
+1. **第一行**
 
 函数接收 module、`__webpack_exports__`、`__webpack_require__`，module 可以获取到模块信息和向外暴露的方法，`__webpack_exports__`、`__webpack_require__` 就相当于 CommonJS 里的 exports 和 require。
 
-#### 第二行
+2. **第二行**
 
 打包后的代码都会开启严格模式
 
-#### 第三行
+3. **第三行**
 
 `__webpack_require__.r` 方法可以看看源码：
 
@@ -209,7 +209,7 @@ __webpack_require__.r = function(exports) {
 
 这方法的作用只是做个标记，告诉 JS 这个方法是一个模块，且采用 ES Module 规范。
 
-#### 第四行
+4. **第四行**
 
 ```js
 /* harmony import */ var _heading_js__WEBPACK_IMPORTED_MODULE_0__ =  __webpack_require__(1);
@@ -1009,7 +1009,7 @@ module.exports = {
 
 将 public 目录下所有文件拷贝到 dist 目录。
 
-## 开发一个 Plugin
+## 开发一个插件
 
 相比于 Loader，Plugin 拥有更宽的能力范围。Loader 只有在加载模块的时候工作，而 Plugin 触及到 Webpack 工作的每一个环节。
 
@@ -1030,7 +1030,7 @@ apply 接收一个参数 compiler，compiler 包含此次构建的所有配置�
 1. 先明确需求，我们要把生成的 bundle.js 文件里面的所有注释信息去掉；
 2. 查找官网文档查找有没有合适的钩子，经过查阅找到了 emit 钩子，这钩子是在即将输出文件时执行，很适合我们的需求
 3. 注册钩子
-    
+  
     ```js
     class MyPlugin {
         apply (compiler) {
@@ -1081,4 +1081,367 @@ apply 接收一个参数 compiler，compiler 包含此次构建的所有配置�
         ]
     }
     ```
+
+## Webpack Dev Server
+
+提供用于开发的 HTTP Server ，集成「自动编译」和「自动刷新浏览器」等功能。
+
+### 基本使用
+
+安装
+
+```sh
+$ yarn add -D webpack-dev-server
+```
+
+使用的方式很简单，之前 Webpack 打包是使用 webpack 命令，现在只要换成 webpack-dev-server 就好，比如：
+
+```sh
+$ yarn webpack-dev-server
+```
+
+执行效果跟执行 webpack 一样，只不过执行完不会停止运行，会继续监听代码变化。这时候可以在浏览器访问页面，默认地址是 `http://localhost:8080/` 。
+
+这时候可以尝试去改变源代码，保存后你会发现 webpack 自动重新打包了，而且浏览器自动刷新了。需要注意的是这边打包的结果不会输出文件，而是存在内存里，访问页面读取的是内存中的数据。
+
+webpack-dev-server 可以传入参数让它启动时自动打开页面：
+
+```sh
+$ yarn webpack-dev-server --open
+```
+
+### 静态资源访问
+
+webpack-dev-server 默认只能识别到打包后的文件，有些文件我们是不需要编译打包的，对于这些文件之前的做法是用 copy-webpack-plugin 将这些插件拷贝到打包目录里。这样的做法是可以让 webpack-dev-server 识别到，只是这种方式更适合在生产环境进行。因为在开发环境中代码会频繁的修改，webpack-dev-server 每次修改文件时都会去打包一次，也就是每次 copy-webpack-plugin 都要去拷贝一遍，要是文件大的话编译速度就会受影响。对于这种情况 webpack-dev-server 有了一个解决方案，就是对于这类文件就直接读取源文件就好，只要配置 contentBase 就能让这些文件可读。
+
+webpack 有对 webpack-dev-server 专门开设了一个配置项：
+
+```js
+module.exports = {
+    // ...
+    devServer: {
+        contentBase: './public'
+    },
+    // ...
+}
+```
+
+这样开启 webpack-dev-server 后就能读得到 public 目录和里面的文件
+
+### 代理 API
+
+使用 webpack-dev-server 提供的 HTTP Server ，在调后端接口的时候就会存在跨域的问题。问了解决这问题 webpack-dev-server 提供了一个代理 API 。
+
+
+```js
+module.exports = {
+    // ...
+    devServer: {
+        contentBase: './public',
+        proxy: {
+            // 匹配 /api 开头的路径就会走这条代理
+            '/api': {
+                // 将 http://localhost:8080/api/users 转化为 http://api.github.com/api/users
+                target: 'http://api.github.com',
+                // 路径覆盖，将 '^/api' 替换为 ''
+                // 将 http://api.github.com/api/users 转为 http://api.github.com/users
+                pathRewrite: {
+                    '^/api': ''
+                },
+                // 使用代理的主机名去请求接口
+                changeOrigin: true
+            }
+        }
+    },
+    // ...
+}
+```
+
+## Source Map
+
+我们开发项目的时候经常需要用到 ES6 语法，ES6 语法想要让浏览器识别就需要 babel 编译，实际在浏览器上运行的其实是编译后的代码，这就导致运行的代码跟开发的代码不一致。这会存在什么问题呢？一旦代码出错的时候无法准确定位到错误代码，就导致无法快速的找到问题代码。而 Source Map 就是为了解决这类问题，顾名思义，这是源代码地图，就是记录着生成后的代码和源代码的映射关系。也就是通过 Source Map 可以将生成后的代码逆向的转化为源代码。
+
+Source Map 是一个 .map 后缀的文件，使用是在文件末尾加载一段注释指定 map 文件路径：
+
+```js
+// ...
+//# sourceMappingURL=myfile.map
+```
+
+这写法除了指定 map 文件，还可以指定 JS 文件：
+
+```js
+//# sourceURL=index.js
+```
+
+只不过这种在代码报错的时候只会提示哪个文件错误，不能定位到具体代码，显示的代码还是打包后的代码。
+
+在 Webpack 中使用 Source Map 只要配置 devtool 就好：
+
+```js
+module.exports = {
+    // ...
+    devtool: 'source-map'
+}
+```
+
+这时候去打包就会生成 map 文件。webpack提供了很多选项，以下将对这些选项详细讲解。
+
+devtool 拥有的选项对比：
+
+| devtool                        | build   | rebuild | production | quality                        |
+| ------------------------------ | ------- | ------- | ---------- | ------------------------------ |
+| （none）                       | fastest | fastest | yes        | bundled code                   |
+| eval                           | fastest | fastest | no         | generated code                 |
+| eval-source-map               | lowest  | fast    | no         | original source |
+| cheap-eval-source-map          | fast    | faster  | no         | transformed code（lines only） |
+| cheap-module-eval-source-map   | slow    | faster  | no         | original source（lines only）  |
+| source-map                     | slowest | slowest | yes        | original source                |
+| cheap-source-map               | fast    | slow    | yes        | transformed code（line only）  |
+| cheap-module-source-map        | slow    | slower  | yes        | original source（line Only）   |
+| inline-cheap-source-map        | fast    | slow    | no         | transformed code（line only）  |
+| inline-cheap-module-source-map | slow    | slowest | no         | original source（lines only）  |
+| inline-source-map             | lowest  | slowest | no         | original source                |
+| hidden-source-map              | slowest | slowest | yes        | original source                |
+| nosources-source-map           | slowest | slowest | yes        | without source content         |
+
+- `generated code`  没有 map 文件，只生成代码，只能定位错误文件，没有代码信息
+- `original source` 源代码，有行列信息
+- `transformed code（lines only）` 转化后的代码，只能行信息
+- `original source（lines only）` 源代码，只有行信息
+- `without source content` 没有源码内容，但能定位错误文件和行列信息
+
+名字里还蕴含的一些含义：
+
+- 带 evel 的都是采用 evel 函数包起来的；
+- 带 source-map 的都能定位代码信息，有的有行列信息、有的只有行信息；
+- 带 cheap 的都是只有行信息的
+- 带 module 的都能看到源码信息的
+- 带 inline 的都是将 Source Map 转成 base64 放在代码里的
+
+两个特殊的：
+
+- hidden-source-map：有生成源码信息的 source map 文件，但代码里面没引用
+- nosource-source-map：能定位错误文件，能知道代码行列信息，但是看不到源代码
+
+Source 如何选择呢？
+
+- 开发环境推荐选择 cheap-module-eval-source-map
+  - 每行代码不会写得太长，能定位到行信息就已经够了
+  - 代码经过转化后差异较大，需要保留源代码
+  - 首次打包速度慢无所谓，重新打包相对较快
+- 生成环境推荐选择 none
+  - Source Map 会暴露源代码
+  - 调式是开发阶段的事情
+
+## HMR
+
+之前我们讲到了使用 webpack-dev-server 可以帮我们自动编译和自动刷新页面，这能极大程度的增加我们的开发效率。不过仅仅是这样还不够，当我们在开发表单页面的时候，我们需要输入一些文本看效果。输入完之后我们觉得还不满意，改了代码后保存，这时候页面刷新了，我们之前填的文本都不见了。为了解决这情况，Webpack 提供了 HMR 热更新，它能做到局部刷新，在不刷新页面的情况下更新最新保存的内容。
+
+HMR 的使用需要三个步骤：
+
+1. 配置 devServer
+
+   ```js
+   module.exports = {
+     // ...
+     devServer: {
+       hot: true
+     },
+     // ...
+   }
+   ```
+
+2. 加入热更新插件
+
+   ```js
+   const webpack = require('webpack')
+   
+   module.exports = {
+     // ...
+     plugins: [
+       new webpack.HotModuleReplacementPlugin()
+     ]
+   }
+   ```
+
+3. 编写热更新逻辑
+
+   ```js
+   if (module.hot) {
+     // module.hot.accept() // 接受自身更新
+     module.hot.accept('./deps_file.js', () => {
+       // deps_file.js 更新完的处理函数
+     })
+   }
+   ```
+
+   如果使用的第三方库，第三方库有处理，我们就需不需要再处理，比如 css-loader 。
+
+注意：
+
+1. module.hot.accept 逻辑写得有问题的话就会自动改成浏览器自动刷新功能，这样就会导致我们无法定位问题。解决这问题就是将 hot 配置改成 hotOnly，这样就不会自动刷新页面了。
+2. 没有配置 HMR 的话 module.hot 是找不到的，要注意先判断是否存在再使用。
+
+## 不同环境的配置
+
+### 内置写法
+
+```js
+const webpack = require('webpack')
+
+module.exports = (env, argv) => {
+  const config = {
+    // ...
+  }
+  
+  config.mode = env
+  
+  if (env === 'development') {
+    config.devtool = 'cheap-module-eval-source-map'
+    config.devServer = {
+      hot: true
+    }
+    config.plugins = [
+      ...config.plugins,
+      new webpack.HotModuleReplacementPlugin()
+    ]
+  }
+  if (env === 'production') {
+    config.plugins = [
+      ...config.plugins,
+      new cleanWebpackPlgin()
+    ]
+  }
+  return config
+}
+```
+
+打包命令
+
+```sh
+# 开发环境
+$ yarn webpack-dev-server --env development
+# 生产环境
+$ yarn webpack --env production
+```
+
+
+
+### webpack-merge
+
+```sh
+$ yarn add -D webpack-merge
+```
+
+Webpack.common.js
+
+```js
+module.exports = {
+  entry: {
+    // ...
+  },
+  output: {
+    // ...
+  }
+  module: {
+    rules: [
+      // ...
+    ]
+  }
+}
+```
+
+webpack.prod.js
+
+```js
+const common = require('./webpack.common')
+const merge = require('webpack-merge')
+
+module.exports = merge(common, {
+  mode: 'production',
+  plugins: [
+    // ...
+  ]
+})
+```
+
+webpack.dev.js
+
+```js
+const common = require('./webpack.common')
+const webpack = require('webpack')
+const merge = require('webpack-merge')
+
+module.exports = merge(common, {
+  mode: 'development',
+  devtool: 'cheap-module-eval-source-map'
+  plugins: [
+    new webpack.HotModuleReplacementPlugin()
+  ]
+})
+```
+
+打包命令：
+
+```sh
+# 开发环境
+$ yarn webpack-dev-server --config webpack.dev.js
+# 生产环境
+$ yarn webpack --config webpack.prod.js
+```
+
+## DefinePlugin
+
+DefinePlugin 是 Webpack 内置的插件，用于向代码注入全局成员，也就是声明一个全局变量，默认注入了 process.env.NODE_ENV ，我可以直接在代码里面是要这个值：
+
+```js
+console.log(process.env.NODE_ENV)  // 'development'
+```
+
+值为 webpack 里配的 mode 。也可以在 html 里面使用：
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>webpack</title>
+  </head>
+  <body>
+    <p><%= process.env.NODE_ENV ></p>
+  </body>
+</html>
+```
+
+如果想注入其他变量，可以这样配：
+
+```js
+const webpack = require('webpack')
+
+module.exports = {
+  // ...
+  plugins: [
+    new webpack.DefinePlugin({
+      BASE_URL: JSON.stringify('http://localhost:8080/api')
+    })
+  ]    
+}
+```
+
+这边定义了 BASE_URL 变量，值为 `'http://localhost:8080/api'` ，注意：这边的变量会以字符串替换的方式，实际使用会把 `BASE_URL` 替换成 ` http://localhost:8080/api` ，外面的引号会没掉，所以最好是使用 JSON.stringify 转化下。
+
+
+
+
+
+
+
+
+
+
+
+
 

@@ -1,13 +1,13 @@
+const webpack = require('webpack')
 const { merge } = require('webpack-merge')
 const commonConfig = require('./webpack.common')
 const path = require('path')
 
 module.exports = merge(commonConfig, {
-  mode: 'development',
   devServer: {
     hot: true
   },
-  devtool: 'cheap-eval-source-map',
+  devtool: 'cheap-module-eval-source-map',
   module: {
     rules: [
       {
@@ -22,5 +22,8 @@ module.exports = merge(commonConfig, {
         enforce: 'pre'
       }
     ]
-  }
+  },
+  plugins: [
+    new webpack.HotModuleReplacementPlugin()
+  ]
 })
