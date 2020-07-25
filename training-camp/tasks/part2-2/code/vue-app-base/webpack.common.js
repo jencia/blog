@@ -6,20 +6,8 @@ const HtmlWebpackPlugin = require('html-webpack-plugin')
 module.exports = {
   mode: process.env.NODE_ENV,
   entry: './src/main.js',
-  output: {
-    filename: 'bundle.js',
-    path: path.join(__dirname, 'dist')
-  },
   module: {
     rules: [
-      {
-        test: /\.less$/,
-        use: ['style-loader', 'css-loader', 'less-loader']
-      },
-      {
-        test: /\.css$/,
-        use: ['style-loader', 'css-loader']
-      },
       {
         test: /\.vue$/,
         use: 'vue-loader'
@@ -30,7 +18,7 @@ module.exports = {
         include: path.join(__dirname, 'src')
       },
       {
-        test: /\.(png|jpg|jpeg)$/,
+        test: /\.(png|jpe?g|gif|svg)$/,
         use: [
           {
             loader: 'url-loader',
@@ -57,6 +45,12 @@ module.exports = {
         }
       }
     ]
+  },
+  resolve: {
+    extensions: ['.js', '.vue', '.json'],
+    alias: {
+      '@': path.join(__dirname, 'src')
+    }
   },
   plugins: [
     new webpack.DefinePlugin({
