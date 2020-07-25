@@ -1434,14 +1434,424 @@ module.exports = {
 这边定义了 BASE_URL 变量，值为 `'http://localhost:8080/api'` ，注意：这边的变量会以字符串替换的方式，实际使用会把 `BASE_URL` 替换成 ` http://localhost:8080/api` ，外面的引号会没掉，所以最好是使用 JSON.stringify 转化下。
 
 
+## Tree Shaking
 
+字面意思是摇树，摇掉树上的枯叶，在代码里面就是移除掉未引用的代码。例如：
 
+utils.js
 
+```js
+export function foo () {
+    // ...
+}
+export function bar () {
+    // ...
+}
+export function baz () {
+    // ...
+}
+```
 
+index.js
 
+```js
+import { foo } from './utils'
 
+foo()
+```
 
+这边在 utils 里定义了三个函数，但实际使用的时候只有 foo 函数有用到，而 bar 和 baz 函数没有被引用。在生产环境打包的时候会默认开启 Thee Shaking，就会把没有被引用的代码移除掉。
 
+Tree Shaking 不是之某个配置选项，而是一组功能搭配使用后的优化效果，在 production 模式下会自动开启。其他模式下需要手动配置，接下来讲解下如何配置。
 
+在 Webpack 4.x 里面所有的优化配置都放在 optimization 里面：
 
+```js
+module.exports ={
+    optimization: {
+        usedExports: true,	// 只导出有被引用的成员
+        minimize: true		// 压缩代码
+    }
+}
+```
 
+Tree Shaking 就是由 usedExports 和 minimize 组合的效果。
+
+如果把代码看作一株大树的话，usedExports 就是负责标记哪些是枯树叶，minimize 负责摇掉枯树叶。
+
+**注意：Tree Shaking 只对 ES Module 有效，如果使用 babel 转成 CommonJS 就会失效**
+
+## Scope Hoisting
+
+状态提升，将所有模块代码合并到同一个函数里。这样做的好处是既提升了运行效率，又减少了代码的体积，具体配置如下：
+
+```js
+module.exports = {
+    optimization: {
+        concatenateModules. true
+    }
+}
+```
+
+##  sideEffects
+
+让我们能通过够配置来标记是否有副作用，这边的副作用指的是除了导出成员外还做了一些额外的事情
+
+```js
+module.exports = {
+    optimization: {
+        sideEffects: true
+    }
+}
+```
+
+开启副作用，这个配置在 production 模式下默认开启。是否有副作用需要在 package.json 做标识：
+
+```json
+{
+    ...
+    "sideEffects": false
+}
+```
+
+这样就代表本项目的代码都没有副作用，你必须要确定每个文件都没有副作用才可以这样写。这边也可以指定哪些文件有副作用，例如：
+
+```json
+{
+    ...
+    "sideEffects": [
+        "./src/extend.js",
+        "*.css"
+    ]
+}
+```
+
+## Code Splitting
+
+代码分包。原来是把所有文件打包一个文件里面，这就导致文件很大，而有些代码根本用不到，就会加载额外的资源，加载速度也会慢一点。Code Splitting 给我们提供了代码分包的功能，将相同的代码提取出一个文件，其他分别打包不同文件按需加载。
+
+实现 Code Splitting 有两种情况，一种是多个入口文件提取公共模块，一种是模块动态导入。
+
+### 多入口打包
+
+通常一个应用对应一个入口，在多页面应用里就存在多个应用，这时就要配置多个入口，入口配置就不再是一个路径，对应的出口也不再是一个。比如这时有两个页面：page1、page2，那配置就要改成这样：
+
+```js
+const HTMLWebpackPlugin = require('html-webpack-plugin')
+
+module.exports = {
+    entry: {
+        page1: './src/page1.js',
+        page2: './src/page2.js',
+    },
+    output: {
+        filename: '[name].bundle.js'
+    },
+    plugins: [
+        new HTMLWebpackPlugin({
+            template: './src/index.html',
+            filename: 'page1.html',
+            chunks: ['page1']
+        }),
+        new HTMLWebpackPlugin({
+            template: './src/index.html',
+            filename: 'page2.html',
+            chunks: ['page2']
+        }),
+    ]
+}
+```
+
+- entry 改成传入对象，对象的 key 是模块名称，value 为入口文件路径。
+
+- output 的 filename 使用 `[name]` 占位符根据入口文件生成对应的输出文件，支持的占位符有以下几种：
+
+  | 占位符 | 描述 |
+  | ------ | ---- |
+  | [hash] | 模块 id的 hash |
+  | [chunkhash] | chunk 内容的 hash |
+  | [contenthash] | 文件内容的 hash |
+  | [name] | 模块名称 |
+  | [id] | 模块 id |
+  | [query] | 模块的 query，例如，文件名 ? 后面的字符串 |
+  | [function] | 一个返回文件名的方法 |
+  
+- 创建多个 HTMLWebpackPlugin ，一个入口对应一个，chunks 传入对应的模块名称
+
+此时打包出来的结果就应该是这样：
+
+```
+├─ dist/
+│   ├─ page1.html
+│   ├─ page1.bundle.js
+│   ├─ page2.html
+│   └─ page2.bundle.js
+├─ src/
+│   ├─ index.html
+│   ├─ page1.js
+│   └─ page2.js
+└─ webpack.config.js
+```
+
+不过这种多个入口会存在一个问题，同一个项目多个入口常常会引用同样的模块或第三方库，就会造成重复引用，存在很大的冗余。如果引用的第三方库体积非常大，这样冗余就更大了，整个包的大小也会大很多。为了解决这问题，webpack 提供了 Code Splitting，用于代码分包，将相同的代码分离到独立的文件里，再共同引用这个文件。用法也很简单，只要加一条配置：
+
+```js
+module.exports = {
+  // ...
+  optimization: {
+    splitChunks: {
+      chunks: 'all',
+    }
+  },
+  // ...
+}
+```
+
+设置 chunks 为 all 表示提取所有模块的公共代码，这时候再去打包，目录结构就会变成这样：
+
+```diff
+ dist/
+  ├─ page1.html
+  ├─ page1.bundle.js
++ ├─ page1~page2.bundle.js
+  ├─ page2.html
+  └─ page2.bundle.js
+```
+
+有时候会分包失败，那是因为公共代码量太少了，分包会有最小大小要求，默认是 20000 字节，小于这个数就不会分包。下列简单举个例子：
+
+utils.js
+
+```js
+export function log (message) {
+    console.log(message)
+}
+```
+
+page1.js
+
+```js
+import { log } from './utils'
+
+log(1111)
+```
+
+page2.js
+
+```js
+import { log } from './utils'
+
+log(2222)
+```
+
+这边共同引用了 uitls 里面的方法，这时候公共的代码就是 utils 里面的代码，就会把这些代码提取到 page1~page2.bundle.js 文件里面。但由于 log 这个方法代码量太少，小于 20000 字节，就不会分包。当然这个数值是可以改的：
+
+```diff
+module.exports = {
+  // ...
+  optimization: {
+    splitChunks: {
+      chunks: 'all',
++     minSize: 0,
+    }
+  },
+  // ...
+}
+```
+
+这样就不管公共代码多小都会分包，不过不建议这样做，分包也是会产生额外代码的，如果本身公共代码就很少就没必要分包了。
+
+### 动态导入
+
+在单页应用里面，通常会有很多页面，页面多起来相应的文件大小也会跟着变大，就会导致首次加载速度慢。用户访问网站通常只是访问其中的几个页面，所以没必要加载所有页面的代码，这时候最好是采用按需加载的方式，而动态导入是实现模块的按需加载最好的方案。
+
+动态导入其实就是 ES6+ 里面的一块内容，就是使用 `import() ` 方法实现，例如我把上面的 page1.js 代码改成动态导入：
+
+```js
+import('./utils').then(({ log }) => {
+    log(1111)
+})
+```
+
+这样其实就实现了动态导入，Webpack 配置文件不需要做任何改动，Webpack 会自动分析代码，检测到使用了 `import()` 就会自动做代码拆分和分包，最后生成的代码目录结构是这样的：
+
+```diff
+ dist/
++ ├─ 2.bundle.js
+  ├─ page1.html
+  ├─ page1.bundle.js
+  ├─ page1~page2.bundle.js
+  ├─ page2.html
+  └─ page2.bundle.js
+```
+
+多了一个 `2.bundle.js` ，这就是动态导入时拆分出来的文件。加载到 `import()` 的时候才去加载这个文件。名字叫 `2.bundle` 是因为导出配置 filename 配的是 `[name].bundle.js` ，这边的 name 找不到就使用模块 id ，2 就是对应的模块 id。当然你也可以给这个模块设置 name 值，设置的方式叫 “魔法注释” ，就是在 import 方法参数前面加注释：
+
+```js
+import(/* webpackChunkName: 'log' */'./utils').then(({ log }) => {
+    log(1111)
+})
+```
+
+魔法注释固定的格式：`/* webpackChunkName: '模块名称' */` ，此时打包出来的文件名称就变成 `log.bundle.js` 。
+
+魔法注释还有一个特性，就是如果多个地方取了相同的模块名称，最后打包的结果会把代码合并在一个文件里。
+
+## MiniCssExtractPlugin
+
+这个插件的作业是将 CSS 文件提取文件里，从而实现 CSS 的按需加载。
+
+之前 CSS 都是这样配置的：
+
+```js
+module.exports = {
+  // ...
+  module: {
+    rules: [
+      {
+        test: /\.css$/,
+        use: [
+          'style-loader',
+          'css-loader'
+        ]
+      }
+    ]
+  }
+  // ...
+}
+```
+
+这样最后打包的时候不会生成 CSS 文件，而是将 CSS 代码会插入到 style 标签里。如果想要生成到 CSS 文件里就要借助 MiniCssExtractPlugin ：
+
+```sh
+$ yarn add -D mini-css-extract-plugin
+```
+
+```diff
++ const MiniCssExtractPlugin = require('mini-css-extract-plugin')
+
+module.exports = {
+  // ...
+  module: {
+    rules: [
+      {
+        test: /\.css$/,
+        use: [
+-         'style-loader',
++         MiniCssExtractPlugin.loader,
+          'css-loader'
+        ]
+      }
+    ]
+  },
+  plugins: [
++   new MiniCssExtractPlugin()
+  ]
+}
+```
+
+这样再去打包就会生成 CSS 文件了。不过有一点需要注意的是，如果 CSS 代码量不会很多的话，提取到单独的文件也不一定是好事，这就意味着会多一个网络请求，这种情况把 CSS 插入到 style 标签里效果会更好。建议 CSS 文件体积超到 150KB 的时候再去考虑要不要提取到单独的文件。
+
+另外，使用 MiniCssExtractPlugin 会存在，使用生产环境模式去打包，生成的 CSS 文件并没有代码压缩。Webpack 默认不会压缩 CSS 文件，我们需要引入额外的插件来实现压缩。官方给我们推荐了一个插件叫 `optimize-css-assets-webpack-plugin` ：
+
+```sh
+$ yarn add -D optimize-css-assets-webpack-plugin
+```
+
+```js
+const MiniCssExtractPlugin = require('mini-css-extract-plugin')
+const OptimizeCssAssetsWebpackPlugin = require('optimize-css-assets-webpack-plugin')
+
+module.exports = {
+  // ...
+  plugins: [
+    new MiniCssExtractPlugin(),
+    new OptimizeCssAssetsWebpackPlugin()
+  ]
+}
+```
+
+这时候再去打包，CSS 文件就会被压缩了。不过这样会存在一个问题，写在 plugins 配置里面就意味着不管是开发环境还是生产环境都会压缩。生产环境下关注的是运行效率，所以注重文件大小，才需要压缩文件。但开发环境注重的是开发效率，压缩这种工作是会降低编译速度的，所以这个插件不适合 plugins 里配置。这种优化压缩类的插件推荐写在 optimization.minimizer 里面：
+
+```diff
+const MiniCssExtractPlugin = require('mini-css-extract-plugin')
+const OptimizeCssAssetsWebpackPlugin = require('optimize-css-assets-webpack-plugin')
+
+module.exports = {
+  // ...
++ optimization: {
++   minimizer: [
++     new OptimizeCssAssetsWebpackPlugin()
++   ]
++ },
+  plugins: [
+    new MiniCssExtractPlugin(),
+-   new OptimizeCssAssetsWebpackPlugin()
+  ]
+}
+```
+
+在 optimization.minimizer 里面只会在开启 optimization 才会去执行，所以比较适合放这里。这时候再去打包，CSS 文件还是能正常压缩。不过这时候又有另外一个问题，原本有压缩的 JS 文件现在没压缩了。这是因为配置了 minimizer 后就认为是要使用自定义配置，原本的配置被清空了，JS 压缩需要自己配置。关于 JS 的压缩官方推荐 terser-webpack-plugin：
+
+```sh
+$ yarn add -D terser-webpack-plugin
+```
+
+```diff
+const MiniCssExtractPlugin = require('mini-css-extract-plugin')
+const OptimizeCssAssetsWebpackPlugin = require('optimize-css-assets-webpack-plugin')
++ const TerserWebpackPlugin = require('terser-webpack-plugin')
+
+module.exports = {
+  // ...
+  optimization: {
+    minimizer: [
++    	new TerserWebpackPlugin(),
+      new OptimizeCssAssetsWebpackPlugin()
+    ]
+  },
+  plugins: [
+    new MiniCssExtractPlugin(),
+    new OptimizeCssAssetsWebpackPlugin()
+  ]
+}
+```
+
+这样问题就解决了，到这里就就大功告成了。
+
+## 输出文件名 Hash
+
+给文件名设置 hash 是为了解决缓存问题。浏览器默认会开启缓存机制，访问网页的时候会优先从缓存里找资源文件，找不到才会去请求资源文件，请求到资源后就会缓存下来，之后就都是读缓存。这就会导致用户有可能一直读的是旧文件，代码更新了用户也拿不到最新的文件。解决这个问题最好的办法就是设置 hash ，缓存机制其实就是根据文件名去查找，如果代码一旦更新，就把文件名改掉，文件名变了就是一个全新的文件，就不会读缓存。设置 hash 就是在原本的名字后面跟上 hash 值，每次的 hash 值都是唯一，就能保证每次都是全新的文件。
+
+在 Webpack 使用 hash 是以占位符的形式设置，例如：
+
+```js
+module.exports = {
+  output: {
+    filename: 'bundle-[hash].js'
+  },
+  plugins: [
+    new MiniCssExtractPlugin({
+    	filename: 'bundle-[hash].css'
+    })
+  ]
+}
+```
+
+Webpack 提供了三种 hash，分别是 [hash]、[chunkhash]、[contenthash]
+
+| 占位符        | 描述                                                         |
+| ------------- | ------------------------------------------------------------ |
+| [hash]        | 所有文件共用一个 hash，只要有一个文件有变化，所有文件的 hash 都会改变 |
+| [chunkhash]   | 同一个模块共用一个 hash，一个文件有变化，当前模块相关文件的 hash 都会改变 |
+| [contenthash] | 每个文件的 hash 都不同，哪个文件改变了就改变对应文件的 hash  |
+
+不管是哪种 hash，存在引用关系的，被引用的文件改变了，对应引用他的文件 hash 都会改变。
+
+默认 hash 是 20 个字符，如果想改变字符个数可以这样写：
+
+```js
+'bundle-[hash:8].js'
+```
+
+加 `:8` 表示 8 位，正常情况下使用 8 位就够用了。
