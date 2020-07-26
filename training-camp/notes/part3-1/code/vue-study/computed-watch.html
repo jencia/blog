@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>计算属性和侦听器</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.min.js"></script>
+</head>
+<body>
+    <div id="app">
+        <p>{{ message }}</p>
+        <p>{{ reversedMessage }}</p>
+
+        <p>{{ person.name }}</p>
+    </div>
+    
+    <script>
+        var vm = new Vue({
+            el: '#app',
+            data: {
+                message: 'Hello Vue.js!',
+                person: {
+                    name: 'tom'
+                }
+            },
+            computed: {
+                reversedMessage: {
+                    get: function () {
+                        return this.message.split('').reverse().join('')
+                    },
+                    set: function (newValue) {
+                        this.message = newValue.split('').reverse().join('')
+                    }
+                }
+            },
+            watch: {
+                'person.name': function (newValue, oldValue) {
+                    console.log('newValue:', newValue)
+                    console.log('oldValue:', oldValue)
+                } 
+            }
+        })
+    </script>
+</body>
+</html>

@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>模板语法</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.min.js"></script>
+</head>
+<body>
+    <div id="app">
+        <p>{{ message }}</p>
+        <!-- 固定展示第一次数据 -->
+        <p v-once>{{ message }}</p>
+
+        <p>Using mustaches: {{ rawHtml }}</p>
+        <!-- 渲染 html 内容 -->
+        <p>Using v-html directive: <span v-html="rawHtml"></span></p>
+
+        <!-- 可传入表达式 -->
+        <p>{{ 1 + 2 * 4 + 2 ** 10 }}</p>
+        <p>{{ true ? 'true' : 'false' }}</p>
+        <p :title="Math.random()">{{ message.split('').reverse().join('') }}</p>
+
+        <!-- 属性绑定和简写方式 -->
+        <button v-bind:disabled="disabled">Button</button>
+        <button :disabled="disabled">Button</button>
+        <p />
+
+        <!-- 事件绑定和简写方式 -->
+        <button v-on:click="seen = !seen">{{ seen ? '隐藏' : '显示' }}</button>
+        <button @click="toggle">{{ seen ? '隐藏' : '显示' }}</button>
+        <!-- 条件语句 -->
+        <p v-if="seen">现在你看到我了</p>
+
+        <!-- 动态参数名字不能用大写和横杆，不能传表达式 -->
+        <p :[my_attr]="message">动态参数</p>
+
+        <!-- 修饰符 -->
+        <input v-model="text" @keyup.enter="query">
+    </div>
+
+    <script>
+        var vm = new Vue({
+            el: '#app',
+            data: {
+                message: 'Hello Vue.js!',
+                rawHtml: '<span style="color: red">This should</span>',
+                disabled: true,
+                seen: true,
+                my_attr: 'title',
+                text: ''
+            },
+            methods: {
+                toggle () {
+                    this.seen = !this.seen;
+                },
+                query (e) {
+                    console.log(e.target.value)
+                }
+            }
+        })
+    </script>
+</body>
+</html>
