@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.min.js"></script>
+</head>
+<body>
+    <div id="app">
+        <!-- 可以直接写触发语句 -->
+        <button @click="count += 1">+ 1</button>
+
+        <!-- 也可以绑定函数，函数定义在 methods 里 -->
+        <button @click="inc">+ 1</button>
+ 
+        <!-- 也可以作为语句执行这个函数 -->
+        <button @click="inc()">+ 1</button>
+ 
+        <!-- 可传入事件对象 $event -->
+        <button @click="inc(true, $event)">+ 2</button>
+ 
+        <p>count: {{ count }} </p>
+
+        <!-- 按了回车键触发，key 值为 Enter 或者 keyCode 值为 13 -->
+        <input @keyup.enter="query">
+        <input @keyup.13="query">
+
+        <!-- key 值为 PageDown 匹配全小写横杆的 page-down -->
+        <input @keyup.page-down="query">
+
+        <br /><br />
+
+        <!-- 即使 Alt 或 Shift 被一同按下时也会触发 -->
+        <button v-on:click.ctrl="query">btn</button>
+
+        <!-- 有且只有 Ctrl 被按下的时候才触发 -->
+        <button v-on:click.ctrl.exact="query">btn</button>
+
+        <!-- 没有任何系统修饰符被按下的时候才触发 -->
+        <button v-on:click.exact="query">btn</button>
+    </div>
+
+    <script>
+        var vm = new Vue({
+            el: '#app',
+            data: {
+                count: 0
+            },
+            methods: {
+                inc: function (isCustom, e) {
+                    if (!isCustom) {
+                        this.count += 1
+                    } else {
+                        var text = e.target.innerText;
+                        var num = text.match(/(\d+)/)[1];
+
+                        this.count += +num;
+                    }
+                },
+                query: function () {
+                    console.log('querying...')
+                }
+            }
+        })
+    </script>
+</body>
+</html>

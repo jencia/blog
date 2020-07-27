@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.min.js"></script>
+</head>
+<body>
+    <div id="app">
+        <p>----------- input ------------</p>
+        <input v-model="msg">
+        <p>{{ msg }}</p>
+
+        <p>---------- textarea ----------</p>
+        <textarea v-model="text"></textarea>
+        <p style="white-space: pre-wrap">{{ text }}</p>
+
+        <p>---------- checkbox ----------</p>
+        <input type="checkbox" id="checkbox1" v-model="checked1">
+        <label for="checkbox1">{{ checked1 }}</label>
+        <br />
+
+        <input type="checkbox" id="checkbox2" v-model="checked2" true-value="on" false-value="off">
+        <label for="checkbox2">{{ checked2 }}</label>
+        <br />
+
+        <input type="checkbox" id="jack" value="Jack" v-model="multiChecked">
+        <label for="jack">Jack</label>
+        <input type="checkbox" id="john" value="John" v-model="multiChecked">
+        <label for="john">John</label>
+        <input type="checkbox" id="mike" value="Mike" v-model="multiChecked">
+        <label for="mike">Mike</label>
+        <br>
+        <span>Checked names: {{ multiChecked }}</span>
+
+        <p>---------- select ------------</p>
+        <div id="example-5">
+            <select v-model="selected">
+              <option value="">请选择</option>
+              <option value="1">A</option>
+              <option :value="'2'">B</option>
+              <option :value="{ name: 'tom' }">C</option>
+            </select>
+            <span>Selected: {{ selected }}</span>
+        </div>
+    </div>
+
+    <script>
+        var vm = new Vue({
+            el: '#app',
+            data: {
+                msg: '',
+                text: '',
+                checked1: false,
+                checked2: 'off',
+                multiChecked: [],
+                selected: ''
+            },
+           
+        })
+    </script>
+</body>
+</html>

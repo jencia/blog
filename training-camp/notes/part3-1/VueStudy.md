@@ -439,3 +439,470 @@ computed 默认是 getter ，也可以设置 setter：
     })
 </script>
 ```
+
+### Class 与 Style 绑定
+
+#### Class 绑定
+
+```html
+<div id="app">
+	<div
+         class="static"
+         v-bind:class="[{ active: isActive, 'text-danger': hasError }]"
+    />
+	<!-- <div v-bind:class="static active"></div> -->
+    
+    <div :class="classObject" />
+    <div :class="['foo', 'bar', { active: isActive }, isActive ? 'active' : '']" />
+</div>
+<script>
+	new Vue({
+        el: '#app',
+        data: {
+            classObject: {
+                active: true,
+                'text-danger': false
+            }
+        },
+        classObject: function () {
+            return {
+                active: this.isActive && !this.error,
+                'text-danger': this.error && this.error.type === 'fatal'
+            }
+        }
+    })
+</script>
+```
+
+```html
+<my-component class="baz boo"></my-component>
+<!-- <p class="foo bar baz boo">Hi</p> -->
+
+<script>
+    Vue.component('my-component', {
+      template: '<p class="foo bar">Hi</p>'
+    })
+</script>
+```
+
+#### Style 绑定
+
+```html
+<div :style="{ color: activeColor, fontSize: fontSize + 'px' }"></div>
+
+<div :style="[style1, style2]"></div>
+
+<div :style="{ display: ['-webkit-box', '-ms-flexbox', 'flex'] }"></div>
+```
+
+### 条件渲染
+
+```html
+<div v-if="status === '1'">
+	<p>11111</p>
+    <input placeholder="1111" key="1">
+</div>
+<div v-else-if="status === '2'">
+	<p>22222</p>
+    <input placeholder="2222" key="2">
+</div>
+<div v-else>
+	<p>other</p>
+</div>
+```
+
+各个条件语句切换时，相同元素会复用，只会改变属性值，而 value 值会保留。不想复用元素的话就给他们设置不同的 key 属性。
+
+```html
+<div v-show="visible">展示</div>
+```
+
+v-show 是切换 display 属性，而 v-if 是判断是否渲染
+
+### 列表渲染
+
+```html
+<div id="app">
+    <div v-if="status === '1'">
+        <p>11111</p>
+        <input placeholder="1111" key="1">
+    </div>
+    <div v-else-if="status === '2'">
+        <p>22222</p>
+        <input placeholder="2222" key="2">
+    </div>
+    <div v-else>
+        <p>other</p>
+    </div>
+
+    <div v-show="status === '2'">v-show</div>
+
+    <ul>
+        <li v-for="item in items" :key="item.message">
+            {{ item.message }}
+        </li>
+    </ul>
+    <ul>
+        <!-- 能接收 index -->
+        <li v-for="(item, index) in items" :key="item.message">
+            {{ item.message }}
+        </li>
+    </ul>
+    <ul>
+        <!-- 可传入 computed 值 -->
+        <li v-for="msg in msgList" :key="msg">
+            {{ msg }}
+        </li>
+    </ul>
+    <ul>
+        <!-- 可遍历对象 -->
+        <li v-for="(value, key, index) in obj" :key="key">
+            ({{ index }}) {{ key }} : {{ value }}
+        </li>
+    </ul>
+    <p>
+        <!-- 可遍历数字，返回 1 到 10 -->
+        <span v-for="n in 10" :key="n">{{ n }}</span><br />
+
+        <!-- v-for 和 v-if 同时时候时 v-for 优先级更高，v-if 能拿到 v-for 传过来的值 -->
+        <span v-for="n in 10" v-if="n < 6" :key="n">{{ n }}</span>
+    </p>
+    <ul>
+        <!-- 组件遍历无法自动将 msg 和 index 传进去，得明确指定那些传入哪些 -->
+        <my-component
+            v-for="(msg, index) in msgList"
+            :item="msg"
+            :index="index"
+            :key="msg"
+        />
+    </ul>
+    <ul>
+        <!-- 组件可使用 is ，可避开一些潜在的浏览器解析错误 -->
+        <li
+            is="my-component"
+            v-for="(msg, index) in msgList"
+            :item="msg"
+            :index="index"
+            :key="msg"
+        />
+    </ul>
+</div>
+<script>
+var example1 = new Vue({
+    el: '#example-1',
+    data: {
+        items: [
+            { message: 'Foo' },
+            { message: 'Bar' }
+        ],
+        obj: {
+            name: 'tom',
+            age: 26
+        }
+    }
+})
+</script>
+```
+
+### 事件处理
+
+```html
+<div id="app">
+    <!-- 可以直接写触发语句 -->
+    <button @click="count += 1">+ 1</button>
+
+    <!-- 也可以绑定函数，函数定义在 methods 里 -->
+    <button @click="inc">+ 1</button>
+
+    <!-- 也可以作为语句执行这个函数 -->
+    <button @click="inc()">+ 1</button>
+
+    <!-- 可传入事件对象 $event -->
+    <button @click="inc(true, $event)">+ 2</button>
+
+    <p>count: {{ count }} </p>
+</div>
+
+<script>
+    var vm = new Vue({
+        el: '#app',
+        data: {
+            count: 0
+        },
+        methods: {
+            inc: function (isCustom, e) {
+                if (!isCustom) {
+                    this.count += 1
+                } else {
+                    var text = e.target.innerText;
+                    var num = text.match(/(\d+)/)[1];
+
+                    this.count += +num;
+                }
+            }
+        }
+    })
+</script>
+```
+
+事件修饰符
+
+```html
+<!-- 阻止单击事件继续传播 -->
+<a @click.stop="doThis"></a>
+
+<!-- 提交事件不再重载页面 -->
+<form @submit.prevent="onSubmit"></form>
+
+<!-- 修饰符可以串联 -->
+<a @click.stop.prevent="doThat"></a>
+
+<!-- 只有修饰符 -->
+<form @submit.prevent></form>
+
+<!-- 添加事件监听器时使用事件捕获模式 -->
+<!-- 即内部元素触发的事件先在此处理，然后才交由内部元素进行处理 -->
+<div @click.capture="doThis">...</div>
+
+<!-- 只当在 event.target 是当前元素自身时触发处理函数 -->
+<!-- 即事件不是从内部元素触发的 -->
+<div @click.self="doThat">...</div>
+
+<!-- 点击事件将只会触发一次，这个修饰符对组件也有效 -->
+<a v-on:click.once="doThis"></a>
+
+<!-- 滚动事件的默认行为 (即滚动行为) 将会立即触发，而不会等待 `onScroll` 完成 -->
+<!-- 用于优化性能，会忽略 .prevent 和 event.preventDefault()  -->
+<div v-on:scroll.passive="onScroll">...</div>
+```
+
+> 使用修饰符时，顺序很重要；相应的代码会以同样的顺序产生。因此，用 v-on:click.prevent.self 会阻止所有的点击，而 v-on:click.self.prevent 只会阻止对元素自身的点击。
+
+按键修饰符
+
+```html
+<!-- 按了回车键触发，key 值为 Enter 或者 keyCode 值为 13 -->
+<input @keyup.enter="query">
+<input @keyup.13="query">
+
+<!-- key 值为 PageDown 匹配全小写横杆的 page-down -->
+<input @keyup.page-down="query">
+```
+
+常用的别名：
+
+- `.enter`
+- `.tab`
+- `.delete` (捕获“删除”和“退格”键)
+- `.esc`
+- `.space`
+- `.up`
+- `.down`
+- `.left`
+- `.right`
+
+可全局设置自定义别名
+
+```js
+// 可以使用 `v-on:keyup.f1`
+Vue.config.keyCodes.f1 = 112
+```
+
+系统修饰键：
+
+- `.ctrl`
+- `.alt`
+- `.shift`
+- `.meta`
+
+```html
+<!-- Alt + C -->
+<input v-on:keyup.alt.67="clear">
+
+<!-- Ctrl + Click -->
+<div v-on:click.ctrl="doSomething">Do something</div>
+
+<!-- 即使 Alt 或 Shift 被一同按下时也会触发 -->
+<button v-on:click.ctrl="onClick">A</button>
+
+<!-- 有且只有 Ctrl 被按下的时候才触发 -->
+<button v-on:click.ctrl.exact="onCtrlClick">A</button>
+
+<!-- 没有任何系统修饰符被按下的时候才触发 -->
+<button v-on:click.exact="onClick">A</button>
+```
+
+鼠标修饰符：
+
+- `.left`
+- `.right`
+- `.middle`
+
+### 表单输入绑定
+
+使用 v-model 在表单上实现双向数据绑定，v-model 会忽略表单元素原本的初始值，使用绑定的数据。
+
+v-model 在内部为不同的输入元素使用不同的 property 并抛出不同的事件：
+
+- text 和 textarea 元素使用 value property 和 input 事件；
+- checkbox 和 radio 使用 checked property 和 change 事件；
+- select 字段将 value 作为 prop 并将 change 作为事件。
+
+```html
+<input v-model="searchText">
+<!-- 等价于 -->
+<input
+    v-bind:value="searchText"
+    v-on:input="searchText = $event.target.value"
+>
+```
+
+各个表单的用法：
+
+```html
+<p>----------- input ------------</p>
+<input v-model="msg">
+<p>{{ msg }}</p>
+
+<p>---------- textarea ----------</p>
+<textarea v-model="text"></textarea>
+<p style="white-space: pre-wrap">{{ text }}</p>
+
+<p>---------- checkbox ----------</p>
+<!-- 单个的值默认 true 和 false -->
+<input type="checkbox" id="checkbox1" v-model="checked1">
+<label for="checkbox1">{{ checked1 }}</label>
+<br />
+
+<!-- 值可改为 on 和 off -->
+<input type="checkbox" id="checkbox2" v-model="checked2" true-value="on" false-value="off">
+<label for="checkbox2">{{ checked2 }}</label>
+<br />
+
+<!-- 多个 checkbox 绑定同一个 v-model ，值为数组，选中了取 value 值 -->
+<input type="checkbox" id="jack" value="Jack" v-model="multiChecked">
+<label for="jack">Jack</label>
+<input type="checkbox" id="john" value="John" v-model="multiChecked">
+<label for="john">John</label>
+<input type="checkbox" id="mike" value="Mike" v-model="multiChecked">
+<label for="mike">Mike</label>
+<br>
+<span>Checked names: {{ multiChecked }}</span>
+
+<p>---------- select ------------</p>
+<div id="example-5">
+    <select v-model="selected">
+        <option value="">请选择</option>
+        <option value="1">A</option>
+        <option :value="'2'">B</option>
+        <!-- 值可为对象 -->
+        <option :value="{ name: 'tom' }">C</option>
+    </select>
+    <span>Selected: {{ selected }}</span>
+</div>
+```
+
+修饰符：
+
+- `.lazy`
+
+    在默认情况下，v-model 在每次 input 事件触发后将输入框的值与数据进行同步 (除了上述输入法组合文字时)。你可以添加 lazy 修饰符，从而转为在 change 事件_之后_进行同步：
+
+    ```html
+    <!-- 在“change”时而非“input”时更新 -->
+    <input v-model.lazy="msg">
+    ```
+
+- `.number`
+
+    如果想自动将用户的输入值转为数值类型，可以给 v-model 添加 number 修饰符：
+
+    ```html
+    <input v-model.number="age" type="number">
+    ```
+    这通常很有用，因为即使在 type="number" 时，HTML 输入元素的值也总会返回字符串。如果这个值无法被 parseFloat() 解析，则会返回原始的值。
+
+- `.trim`
+
+    如果要自动过滤用户输入的首尾空白字符，可以给 v-model 添加 trim 修饰符：
+
+    ```html
+    <input v-model.trim="msg">
+    ```
+
+### 组件基础
+
+```html
+<div id="app">
+    <my-comp
+        v-for="(title, index) in ['foo', 'bar', 'baz']"
+        :key="title"
+        :title="title"
+        @update="setTotal"
+    >
+        {{ index }}
+    </my-comp>
+    <p>total: {{ total }}</p>
+    <p>最新动态：{{ log }}</p>
+</div>
+
+<script>
+    Vue.component('my-comp', {
+        // 接收父类传来的属性
+        props: ['title'],
+        // data 必须要是函数
+        data: function () {
+            return {
+                count: 0
+            }
+        },
+        // 插槽 slot 即子元素存放的位置
+        template: `
+            <p>
+                <slot></slot>
+                <span>{{ title ? (title + '：') : '' }} </span>
+                <button @click="inc">+ 1</button>
+                <span>{{ count }} </span>
+            </p>
+        `,
+        methods: {
+            inc: function () {
+                this.count += 1
+                // 用 $emit 去执行父类想组件绑定的事件，第一个参数是事件名称，第二个是 传入事件参数
+                this.$emit('update', this.title)
+            }
+        }
+    })
+    var vm = new Vue({
+        el: '#app',
+        data: {
+            total: 0,
+            log: ''
+        },
+        methods: {
+            setTotal: function (title) {
+                this.total += 1
+                this.log = title + ' + 1'
+            }
+        }
+    })
+</script>
+```
+
+动态切换组件
+
+```html
+<component :is="currentTabComponent"></component>
+```
+
+有些 html 元素有严格的限制，比如 ul 下一定要是 li，table 下一定要放表格元素，select 下一定要放 option ，如果不是就可能出现解析问题，所以这种情况最好用 is 属性使用组件
+
+```html
+<ul>
+    <li is="my-comp"></li>
+</ul>
+```
+
+## 深入了解组件
+
+### 组件注册

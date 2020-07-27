@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.min.js"></script>
+</head>
+<body>
+    <div id="app">
+        <div v-if="status === '1'">
+            <p>11111</p>
+            <input placeholder="1111" key="1">
+        </div>
+        <div v-else-if="status === '2'">
+            <p>22222</p>
+            <input placeholder="2222" key="2">
+        </div>
+        <div v-else>
+            <p>other</p>
+        </div>
+    
+        <div v-show="status === '2'">v-show</div>
+    
+        <ul>
+            <li v-for="item in items" :key="item.message">
+                {{ item.message }}
+            </li>
+        </ul>
+        <ul>
+            <!-- 能接收 index -->
+            <li v-for="(item, index) in items" :key="item.message">
+                {{ item.message }}
+            </li>
+        </ul>
+        <ul>
+            <!-- 可传入 computed 值 -->
+            <li v-for="msg in msgList" :key="msg">
+                {{ msg }}
+            </li>
+        </ul>
+        <ul>
+            <!-- 可遍历对象 -->
+            <li v-for="(value, key, index) in obj" :key="key">
+                ({{ index }}) {{ key }} : {{ value }}
+            </li>
+        </ul>
+        <p>
+            <!-- 可遍历数字，返回 1 到 10 -->
+            <span v-for="n in 10" :key="n">{{ n }}</span><br />
+    
+            <!-- v-for 和 v-if 同时时候时 v-for 优先级更高，v-if 能拿到 v-for 传过来的值 -->
+            <span v-for="n in 10" v-if="n < 6" :key="n">{{ n }}</span>
+        </p>
+        <ul>
+            <!-- 组件遍历无法自动将 msg 和 index 传进去，得明确指定那些传入哪些 -->
+            <my-component
+                v-for="(msg, index) in msgList"
+                :item="msg"
+                :index="index"
+                :key="msg"
+            />
+        </ul>
+        <ul>
+            <!-- 组件可使用 is ，可避开一些潜在的浏览器解析错误 -->
+            <li
+                is="my-component"
+                v-for="(msg, index) in msgList"
+                :item="msg"
+                :index="index"
+                :key="msg"
+            />
+        </ul>
+    </div>
+
+    <script>
+        Vue.component('my-component', {
+            props: ['item', 'index'],
+            template: `<li>{{ index }} - {{ item }}</li>`
+        })
+        var vm = new Vue({
+            el: '#app',
+            data: {
+                status: '1',
+                items: [
+                    { message: 'Foo' },
+                    { message: 'Bar' }
+                ],
+                obj: {
+                    name: 'tom',
+                    age: 26
+                }
+            },
+            computed: {
+                msgList: function() {
+                    return this.items.map(v => v.message)
+                }
+            }
+        })
+    </script>
+</body>
+</html>

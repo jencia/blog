@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.min.js"></script>
+</head>
+<body>
+    <div id="app">
+        <my-comp
+            v-for="(title, index) in ['foo', 'bar', 'baz']"
+            :key="title"
+            :title="title"
+            @update="setTotal"
+        >
+            {{ index }}
+        </my-comp>
+        <p>total: {{ total }}</p>
+        <p>最新动态：{{ log }}</p>
+
+        <p>------------------------------</p>
+        <component is="my-comp"></component>
+        <ul>
+            <li is="my-comp"></li>
+        </ul>
+    </div>
+
+    <script>
+        Vue.component('my-comp', {
+            props: ['title'],
+            // data 必须要是函数
+            data: function () {
+                return {
+                    count: 0
+                }
+            },
+            template: `
+                <p>
+                    <slot></slot>
+                    <span>{{ title ? (title + '：') : '' }} </span>
+                    <button @click="inc">+ 1</button>
+                    <span>{{ count }} </span>
+                </p>
+            `,
+            methods: {
+                inc: function () {
+                    this.count += 1
+                    this.$emit('update', this.title)
+                }
+            }
+        })
+        var vm = new Vue({
+            el: '#app',
+            data: {
+                total: 0,
+                log: ''
+            },
+            methods: {
+                setTotal: function (title) {
+                    this.total += 1
+                    this.log = title + ' + 1'
+                }
+            }
+        })
+    </script>
+</body>
+</html>
