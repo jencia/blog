@@ -906,3 +906,380 @@ v-model 在内部为不同的输入元素使用不同的 property 并抛出不�
 ## 深入了解组件
 
 ### 组件注册
+
+#### 全局注册
+
+可以用 kebab-case (短横线分割命名) 的命名风格
+
+```js
+Vue.component('my-component-name', { /* ... */ })
+```
+
+也可以用 PascalCase (大驼峰) 命名风格
+
+```js
+Vue.component('MyComponentName', { /* ... */ }) 
+```
+
+不管用拿着命名风格，在 DOM 模板里面都是用 kebab-case 还是 PascalCase 风格命名，都是转为 kebab-case 风格使用。
+
+```html
+<my-component-name></my-component-name>
+```
+
+只要在 Vue 实例化之前注册就可以访问到：
+
+```html
+<div id="#app">
+    <my-component-name></my-component-name>
+</div>
+<script>
+    Vue.component('MyComponentName', { /* ... */ })
+
+    new Vue({
+        el: '#app'
+    })
+</script>
+```
+
+#### 局部注册
+
+局部注册就是将原本应该放在 Vue.component 第二个参数的组件配置，赋值给一个变量，然后通过 components 去配置所用的组件
+
+```js
+var CompA = { /* ... */ }
+var CompB = { /* ... */ }
+// 局部注册能注册其他局部组件
+var CompC = {
+    components: {
+        'comp-b': CompB
+    }
+}
+
+// 根组件注册局部组件
+new Vue({
+    el: '#app',
+    components: {
+        'comp-a': CompA,
+        'comp-c': CompC
+    }
+})
+```
+
+ES Module 写法：
+
+```js
+import CompA from './CompA'
+
+export default {
+    components: {
+        ComA
+    }
+}
+```
+
+### Prop
+
+#### Prop 的大小写
+
+在 html 中属性名大小写不敏感，所以所有的大写都会解析成小写字符，所以在 DOM 模板中只能使用 kebab-case (短横线分隔命名) 命名
+
+```html
+<!-- 在 HTML 中是 kebab-case 的 -->
+<blog-post post-title="hello!"></blog-post>
+```
+
+但在组件定义的时候要使用 camelCase (驼峰命名法)，属性名要转成对应的 camelCase 写法
+
+```js
+Vue.component('blog-post', {
+  // 在 JavaScript 中是 camelCase 的
+  props: ['postTitle'],
+  template: '<h3>{{ postTitle }}</h3>'
+})
+```
+
+#### Prop 类型
+
+写 props 的时候最好指定具体的数据类型
+
+```js
+props: {
+  title: String,
+  likes: Number,
+  isPublished: Boolean,
+  commentIds: Array,
+  author: Object,
+  callback: Function,
+  contactsPromise: Promise // or any other constructor
+}
+```
+
+属性校验部分请查看下列的 [类型检查](#Prop\ 验证)
+
+#### 传递静态 Prop
+
+```html
+<!-- 数字 -->
+<my-comp :num="30"></my-comp>
+
+<!-- 布尔值 -->
+<my-comp bool></my-comp>
+<my-comp :bool="false"></my-comp>
+
+<!-- 数组 -->
+<my-comp :arr="[1, 2, 3]"></my-comp>
+
+<!-- 对象 -->
+<my-comp
+    :obj="{
+        name: 'Veronica',
+        company: 'Veridian Dynamics'
+    }"
+></my-comp>
+
+<!-- 传入多个数据 -->
+<my-comp v-bind="{ id: 1, title: 'Hello Vue.js' }"></my-comp>
+<!-- 等价于 -->
+<my-comp :id="1" :title="'Hello Vue.js'"></my-comp>
+```
+
+#### 单项数据流
+
+所有的 prop 都使得其父子 prop 之间形成了一个单向下行绑定：父级 prop 的更新会向下流动到子组件中，但是反过来则不行。
+
+不允许修改 props 的值，如果想改，有两种方式：
+
+第一种是在组件内里再定义一份数据，将父组件传来的 props 值作为初始值，后续就改变组件里的这份数据就好。不过仅仅是这样会导致父类这个值改变了，子类无法感知到。还需要结合 watch 去监听父组件变化做出改变。
+
+```js
+const CounterView = {
+    props: ['initCount'],
+    data () {
+        return {
+            count: this.initCount
+        }
+    },
+    watch: {
+        initCount (next, prev) {
+            next !== prev && (this.count = next)
+        }
+    }
+}
+```
+
+第二种是使用计算属性对父组件的值做转化
+
+```js
+const CounterView = {
+    props: ['size'],
+    computed: {
+        normalizedSize: function () {
+            return this.size.trim().toLowerCase()
+        }
+    }
+}
+```
+
+具体用哪种根据实际业务情况选择。
+
+#### Prop 验证
+
+对 props 做类型校验，让使用者如果没按照指定的类型传值，在控制台就会报警告。
+
+```js
+Vue.component('my-component', {
+  props: {
+    // 基础的类型检查 (`null` 和 `undefined` 会通过任何类型验证)
+    propA: Number,
+    // 多个可能的类型
+    propB: [String, Number],
+    // 必填的字符串
+    propC: {
+      type: String,
+      required: true
+    },
+    // 带有默认值的数字
+    propD: {
+      type: Number,
+      default: 100
+    },
+    // 带有默认值的对象
+    propE: {
+      type: Object,
+      // 对象或数组默认值必须从一个工厂函数获取
+      default: function () {
+        return { message: 'hello' }
+      }
+    },
+    // 自定义验证函数
+    propF: {
+      validator: function (value) {
+        // 这个值必须匹配下列字符串中的一个
+        return ['success', 'warning', 'danger'].indexOf(value) !== -1
+      }
+    }
+  }
+})
+```
+
+`type` 可以是下列原生构造函数中的一个：
+
+- `String`
+- `Number`
+- `Boolean`
+- `Array`
+- `Object`
+- `Date`
+- `Function`
+- `Symbol`
+
+额外的，type 还可以是一个自定义的构造函数，并且通过 instanceof 来进行检查确认。例如，给定下列现成的构造函数：
+
+```js
+function Person (firstName, lastName) {
+  this.firstName = firstName
+  this.lastName = lastName
+}
+```
+
+你可以使用：
+
+```js
+Vue.component('blog-post', {
+  props: {
+    author: Person
+  }
+})
+```
+
+来验证 author prop 的值是否是通过 new Person 创建的。
+
+### 自定义事件
+
+#### 组件名
+
+自定义一个 my-event 事件，传入事件处理函数 doSomething
+
+```html
+<my-component @my-event="doSomething"></my-component>
+```
+
+组件内部用 `$emit` 去执行事件函数
+
+```js
+this.$emit('my-event')
+```
+
+注意：事件名称不像组件名和 prop 一样又大小写转化，事件名称都要用 kebab-case 命名风格。
+
+#### 组件上使用 v-model
+
+```js
+Vue.component('base-checkbox', {
+    // 定义触发机制，v-model 改变的值是 checked 属性，由 change 事件触发
+    model: {
+        prop: 'checked',
+        event: 'change'
+    },
+    // 这边还是要定义属性名
+    props: {
+        checked: Boolean
+    },
+    // 使用 v-model 绑定的值和对应 change 事件处理函数
+    template: `
+        <input
+            type="checkbox"
+            :checked="checked"
+            @change="$emit('change', $event.target.checked)"
+        >
+    `
+})
+```
+
+```html
+<base-checkbox v-model="lovingVue"></base-checkbox>
+```
+
+#### 将原生事件绑定到组件
+
+有时候会需要直接监听原生的事件，比如 click 事件，组件并没有捕捉 click 事件，直接去监听 click 无法生效，这时候就需要监听原生事件。
+
+```html
+<base-input v-on:click.native="onClick"></base-input>
+```
+
+原生事件会绑定在组件内的根元素，如果根元素不存在这个原生事件就无法生效。比如你绑定了 focus 的元素事件，但是根元素是一个 label 就无法生效，例如：
+
+```html
+<label>
+    {{ label }}
+    <input
+        v-bind="$attrs"
+        v-bind:value="value"
+        v-on:input="$emit('input', $event.target.value)"
+    >
+</label>
+```
+
+解决这种问题的方案是使用 `$listeners`
+
+```js
+Vue.component('base-input', {
+  inheritAttrs: false,
+  props: ['label', 'value'],
+  computed: {
+    inputListeners: function () {
+      var vm = this
+      // `Object.assign` 将所有的对象合并为一个新对象
+      return Object.assign({},
+        // 我们从父级添加所有的监听器
+        this.$listeners,
+        // 然后我们添加自定义监听器，
+        // 或覆写一些监听器的行为
+        {
+          // 这里确保组件配合 `v-model` 的工作
+          input: function (event) {
+            vm.$emit('input', event.target.value)
+          }
+        }
+      )
+    }
+  },
+  template: `
+    <label>
+      {{ label }}
+      <input
+        v-bind="$attrs"
+        v-bind:value="value"
+        v-on="inputListeners"
+      >
+    </label>
+  `
+})
+```
+
+#### `.sync` 修饰符
+
+有时候子组件想要改变父组件传来的属性值，又嫌双向绑定太麻烦，自己内部再维护个状态再 watch 下也很麻烦。这种情况通过自定义事件是最方便的
+
+```js
+this.$emit('update:title', newTitle)
+```
+
+通过触发下这样的函数就能实现想要的效果，对应的组件用法：
+
+```html
+<text-document
+  :title="doc.title"
+  @update:title="doc.title = $event"
+></text-document>
+```
+
+`.sync` 就是为了这种情况而存在的，提供了简写的方式，可以改成这样：
+
+```html
+<text-document :title.sync="doc.title"></text-document>
+```
+
+注意：使用了 .sync 就不能传表达式和字面量，只能传变量。

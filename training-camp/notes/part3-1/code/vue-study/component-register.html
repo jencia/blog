@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.min.js"></script>
+</head>
+<body>
+    <div id="app">
+        <my-component1></my-component1>
+        <!-- My Component1 -->
+        
+        <!-- 虽然定义的时候是用大驼峰，但在 DOM 模板里还是用全小写横杆连接，以下写法不会渲染 -->
+        <MyComponent1></MyComponent1>
+
+        <my-component2 test-xx="aaa"></my-component2>
+        <!-- My Component2 -->
+
+        <p>
+            Parent Component count: {{ initCount }}
+            <button @click="initCount += 1">+1</button>
+        </p>
+        <counter-view :init-count="initCount"></counter-view>
+    </div>
+    <script>
+        // 支持两种命名风格
+        Vue.component('MyComponent1', {
+            template: '<p>My Component1</p>'
+        })
+        Vue.component('my-component2', {
+            props: ['testXx'],
+            template: '<p>My Component2 {{ testXx }}</p>'
+        })
+        
+        var CounterView = {
+            props: ['initCount'],
+            data () {
+                return {
+                    count: this.initCount
+                }
+            },
+            template: `
+                <div>
+                    Child Component count: {{ count }}
+                    <button @click="count += 1">+1</button>
+                </div>
+            `,
+            watch: {
+                initCount (next, prev) {
+                    next !== prev && (this.count = next)
+                }
+            }
+        }
+        var vm = new Vue({
+            el: '#app',
+            components: { CounterView },
+            data: {
+                initCount: 0
+            }
+        })
+    </script>
+</body>
+</html>
