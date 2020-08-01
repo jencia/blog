@@ -1048,27 +1048,20 @@ props: {
 
 所有的 prop 都使得其父子 prop 之间形成了一个单向下行绑定：父级 prop 的更新会向下流动到子组件中，但是反过来则不行。
 
-不允许修改 props 的值，如果想改，有两种方式：
-
-第一种是在组件内里再定义一份数据，将父组件传来的 props 值作为初始值，后续就改变组件里的这份数据就好。不过仅仅是这样会导致父类这个值改变了，子类无法感知到。还需要结合 watch 去监听父组件变化做出改变。
+不允许修改 props 的值，如果想转化下数据，可以将值赋值给另一个数据。
 
 ```js
 const CounterView = {
-    props: ['initCount'],
+    props: ['initName'],
     data () {
         return {
-            count: this.initCount
-        }
-    },
-    watch: {
-        initCount (next, prev) {
-            next !== prev && (this.count = next)
+            name: `【${this.initName}】`
         }
     }
 }
 ```
 
-第二种是使用计算属性对父组件的值做转化
+或者放进计算属性里转化下。
 
 ```js
 const CounterView = {
@@ -1081,7 +1074,7 @@ const CounterView = {
 }
 ```
 
-具体用哪种根据实际业务情况选择。
+如果想改变 props 的值最好在父组件提供改变方法再往下传，或者用 `vuex` 状态管理器。
 
 #### Prop 验证
 
@@ -1283,3 +1276,947 @@ this.$emit('update:title', newTitle)
 ```
 
 注意：使用了 .sync 就不能传表达式和字面量，只能传变量。
+
+### 插槽
+
+#### 插槽内容
+
+```html
+<navigation-link url="/profile">
+  Your Profile
+</navigation-link>
+```
+
+```html
+<a :href="url" class="nav-link">
+  <slot></slot>
+</a>
+```
+
+slot 就类似于 react 的 children 子元素，子元素可以是字符串、DOM 模板、其他组件。
+
+#### 后备内容
+
+slot 可以设置默认值。
+
+```html
+<a :href="url" class="nav-link">
+  <slot>default value</slot>
+</a>
+```
+
+slot 的子元素将作为 slot 的默认值，当组件被使用的时候没有传入子元素就使用 slot 的默认值。
+
+#### 具名插槽
+
+有些情况我们需要设置多个插槽，slot 提供了特殊的属性 `name` 用来插入多个 slot
+
+```html
+<div class="container">
+    <header>
+        <slot name="header"></slot>
+    </header>
+    <main>
+        <slot></slot>
+    </main>
+    <footer>
+        <slot name="footer"></slot>
+    </footer>
+</div>
+```
+
+通过设置不同的 name 做区分，没传 name 的就是默认插槽，name 为 default 。非默认插槽使用 v-slot 设置插槽值
+
+```html
+<base-layout>
+    <template v-slot:header>
+        <h1>Here might be a page title</h1>
+    </template>
+
+    <p>A paragraph for the main content.</p>
+    <p>And another one.</p>
+
+    <template v-slot:footer>
+        <p>Here's some contact info</p>
+    </template>
+</base-layout>
+```
+
+没有被带有 v-slot 的 `<template>` 包裹的内容都视为默认插槽的内容。
+
+注意：v-slot 只能加在 `<template>` 上。
+
+#### 作用域插槽
+
+正常情况下父组件是拿不到子组件的数据的，有时候就会有这种需求。slot 提供了一种作用域插槽，将数据传到插槽作用域：
+
+```html
+<slot :user="user"></slot>
+```
+
+```html
+<current-user>
+    <template v-slot:default="slotProps">
+        {{ slotProps.user.firstName }}
+    </template>
+</current-user>
+```
+
+v-slot 的值将作为作用域变量，变量的名字可以随意取，可以通过这个变量去拿到 slot 里传过来的数据。
+
+你也可以对作用域变量进行解构和设置默认值：
+
+```html
+<current-user>
+    <template v-slot:default="{ user = { firstName: 'default value' } }">
+        {{ user.firstName }}
+    </template>
+</current-user>
+```
+
+#### 动态插槽
+
+对于插槽的名称也可以使用动态名字：
+
+```html
+<base-layout>
+    <template v-slot:[dynamicSlotName]>
+        ...
+    </template>
+</base-layout>
+```
+
+#### 具名插槽的缩写
+
+`v-slot:name` 可以缩写成 `#name`
+
+```html
+<base-layout>
+    <template #header>
+        <h1>Here might be a page title</h1>
+    </template>
+
+    <p>A paragraph for the main content.</p>
+    <p>And another one.</p>
+
+    <template #footer>
+        <p>Here's some contact info</p>
+    </template>
+</base-layout>
+```
+
+### 动态组件 & 异步组件
+
+#### 动态组件
+
+```html
+<component :is="currComp"></component>
+```
+
+组件通过 is 引用自定义组件，然后通过切换不同的组件名实现动态组件。不过动态组件每次切换都会重新创建新的实例，像 tabs 之类的界面会被频繁的来回切换，导致频繁创建新的实例，为了解决这问题，引入了 `<keep-alive>`
+
+```html
+<keep-alive>
+    <component :is="currComp"></component>
+</keep-alive>
+```
+
+被包在 `<keep-alive>` 里面的组件在第一次被创建的时候就会被缓存下来，下次就直接引用缓存。
+
+注意：需要被缓存的组件都需要有自己的名字，可以通过 `name` 选项或是局部/全局注册。
+
+#### 异步组件
+
+```js
+Vue.component('async-example', (resolve, reject) => {
+  setTimeout(function () {
+    // 向 `resolve` 回调传递组件定义
+    resolve({
+      template: '<div>I am async!</div>'
+    })
+  }, 1000)
+})
+
+Vue.component('async-webpack-example', function (resolve) {
+  // 这个特殊的 `require` 语法将会告诉 webpack
+  // 自动将你的构建代码切割成多个包，这些包
+  // 会通过 Ajax 请求加载
+  require(['./my-async-component'], resolve)
+})
+
+Vue.component(
+  'async-webpack-example',
+  // 这个动态导入会返回一个 `Promise` 对象。
+  () => import('./my-async-component')
+)
+
+new Vue({
+  // ...
+  components: {
+    'my-component': () => import('./my-async-component')
+  }
+})
+
+const AsyncComponent = () => ({
+  // 需要加载的组件 (应该是一个 `Promise` 对象)
+  component: import('./MyComponent.vue'),
+  // 异步组件加载时使用的组件
+  loading: LoadingComponent,
+  // 加载失败时使用的组件
+  error: ErrorComponent,
+  // 展示加载时组件的延时时间。默认值是 200 (毫秒)
+  delay: 200,
+  // 如果提供了超时时间且组件加载也超时了，
+  // 则使用加载失败时使用的组件。默认值是：`Infinity`
+  timeout: 3000
+})
+```
+
+### 处理边界情况
+
+#### 访问元素 & 组件
+
+子组件访问根实例：
+
+```js
+// 获取根组件的数据
+this.$root.foo
+
+// 写入根组件的数据
+this.$root.foo = 2
+
+// 访问根组件的计算属性
+this.$root.bar
+
+// 调用根组件的方法
+this.$root.baz()
+```
+
+子组件访问父组件实例：
+
+```js
+this.$parent.foo
+```
+
+父组件访问子组件实例：
+
+```html
+<input ref="usernameInput"></input>
+```
+
+```js
+this.$refs.usernameInput
+```
+
+如果 `ref` 和 `v-for` 结合使用，`ref` 拿到的值是数组
+
+依赖注入：
+
+把想暴露给后代组件的属性或方法放在 `provide` 里
+
+```js
+provide: function () {
+  return {
+    getMap: this.getMap
+  }
+}
+```
+
+可以在任意一层组件里使用 `inject` 注入想要使用的数据，用法跟 `props` 类似
+
+```js
+inject: ['getMap']
+```
+
+#### 程序化的事件侦听器
+
+事件的触发都是通过 `$emit` 来实现，之前都是拿它来触发 `v-on` 定义的事件，除此之外，Vue 还提供了侦听器方法：
+
+- `$on(eventName, eventHandler)` 侦听一个事件
+- `$once(eventName, eventHandler)` 一次性侦听一个事件
+- `$off(eventName, eventHandler)` 停止侦听一个事件
+
+这些方法不仅可以侦听自定义事件，还能侦听生命周期：
+
+```js
+this.$once('hook:beforeDestroy', function() {
+    // 组件销毁前
+})
+```
+
+#### 循环引用
+
+组件之间互相引用的问题，解决这问题可以先将另外一个延后注册，可以在生命周期 `beforeCreate` 里注册组件。
+
+```js
+beforeCreate: function () {
+    this.$options.components.MyComp = require('./my-comp.vue').default
+}
+```
+
+也可以设置成动态组件
+
+```js
+components: {
+    myComp: () => import('./my-comp.vue')
+}
+```
+
+#### 模板定义的替代品
+
+`inline-template` 作为属性写在组件上，这个组件里面的内容将作为模板
+
+```html
+<my-comp inline-template>
+    <div>
+        <p>These are compiled as the component's own template.</p>
+        <p>Not parent's transclusion content.</p>
+    </div>
+</my-comp>
+```
+
+`text/x-template` 使用在 `<script>` 标签上，其内容作为模板存在
+
+```html
+<script type="text/x-template" id="hello-world-template">
+    <p>Hello hello hello</p>
+</script>
+```
+
+```js
+Vue.component('hello-world', {
+  template: '#hello-world-template'
+})
+```
+
+#### 控制更新
+
+强制重新渲染
+
+```js
+this.$forceUpdate()
+```
+
+`v-once` 使得内容值计算一次就被缓存下来
+
+```js
+Vue.component('terms-of-service', {
+    template: `
+        <div v-once>
+            <h1>Terms of Service</h1>
+            ... a lot of static content ...
+        </div>
+    `
+})
+```
+
+## 可复用性 & 组合
+
+### 混入
+
+#### 基础
+
+```js
+// 定义一个混入对象
+var myMixin = {
+    created: function () {
+        this.hello()
+    },
+    methods: {
+        hello: function () {
+            console.log('hello from mixin!')
+        }
+    }
+}
+
+// 定义一个使用混入对象的组件
+var Component = Vue.extend({
+    mixins: [myMixin]
+    // created 和 methods 都会合并进来
+})
+
+var component = new Component() // "hello from mixin!"
+```
+
+#### 选项合并
+
+遇到都有 data 的合并数据，字段相同的优先使用组件的
+
+```js
+var mixin = {
+    data: function () {
+        return {
+            message: 'hello',
+            foo: 'abc'
+        }
+    }
+}
+new Vue({
+    mixins: [mixin],
+    data: function () {
+        return {
+            message: 'goodbye',
+            bar: 'def'
+        }
+    },
+    created: function () {
+        console.log(this.$data)
+        // { message: "goodbye", foo: "abc", bar: "def" }
+    }
+})
+```
+
+遇到同样的钩子的，两个都会执行
+
+```js
+var mixin = {
+  created: function () {
+    console.log('混入对象的钩子被调用')
+  }
+}
+new Vue({
+  mixins: [mixin],
+  created: function () {
+    console.log('组件钩子被调用')
+  }
+})
+// "混入对象的钩子被调用"
+// "组件钩子被调用"
+```
+
+`methods`、`components`、`directives` 遇到相同的方法会取组件的，而不是两个都执行。
+
+```js
+var mixin = {
+  methods: {
+    foo: function () {
+      console.log('foo')
+    },
+    conflicting: function () {
+      console.log('from mixin')
+    }
+  }
+}
+var vm = new Vue({
+  mixins: [mixin],
+  methods: {
+    bar: function () {
+      console.log('bar')
+    },
+    conflicting: function () {
+      console.log('from self')
+    }
+  }
+})
+vm.foo() // "foo"
+vm.bar() // bar"
+vm.conflicting() // "from self"
+```
+
+注意：`Vue.extend()` 也是使用相同策略进行合并。
+
+#### 全局混入
+
+全局混入会作用到每一个实例上
+
+```js
+// 为自定义的选项 'myOption' 注入一个处理器。
+Vue.mixin({
+    created: function () {
+        var myOption = this.$options.myOption
+        if (myOption) {
+            console.log(myOption)
+        }
+    }
+})
+new Vue({
+    myOption: 'hello!'
+})
+// "hello!"
+```
+
+#### 自定义选项合并策略
+
+自定义选项将使用默认策略，即简单地覆盖已有值。如果想让自定义选项以自定义逻辑合并，可以向 Vue.config.optionMergeStrategies 添加一个函数：
+
+```js
+Vue.config.optionMergeStrategies.myOption = function (toVal, fromVal) {
+  // 返回合并后的值
+}
+```
+
+对于多数值为对象的选项，可以使用与 methods 相同的合并策略：
+
+```js
+var strategies = Vue.config.optionMergeStrategies
+
+strategies.myOption = strategies.methods
+```
+
+### 自定义指令
+
+指令就是 `v-for`、`v-if`、`v-slot` 等，这些都是内置指令，Vue 允许我们自定义执行，也就是给某个属性赋予功能。例如：
+
+```js
+// 注册一个全局自定义指令 `v-focus`
+Vue.directive('focus', {
+    // 当被绑定的元素插入到 DOM 中时
+    inserted: function (el) {
+        // 聚焦元素
+        el.focus()
+    }
+})
+```
+
+```html
+<input v-focus>
+```
+
+以上是全局注册，也可以局部注册
+
+```js
+directives: {
+    focus: {
+        // 指令的定义
+        inserted: function (el) {
+            el.focus()
+        }
+    }
+}
+```
+
+#### 钩子函数
+
+一个指令定义对象可以提供如下几个钩子函数 (均为可选)：
+
+- `bind`：只调用一次，指令第一次绑定到元素时调用。在这里可以进行一次性的初始化设置。
+- `inserted`：被绑定元素插入父节点时调用 (仅保证父节点存在，但不一定已被插入文档中)。
+- `update`：所在组件的 VNode 更新时调用，但是可能发生在其子 VNode 更新之前。指令的值可能发生了改变，也可能没有。但是你可以通过比较更新前后的值来忽略不必要的模板更新。
+- `componentUpdated`：指令所在组件的 VNode 及其子 VNode 全部更新后调用。
+- `unbind`：只调用一次，指令与元素解绑时调用。
+
+接下来我们来看一下钩子函数的参数 (即 el、binding、vnode 和 oldVnode)。
+
+#### 钩子函数参数
+
+指令钩子函数会被传入以下参数：
+
+- `el`：指令所绑定的元素，可以用来直接操作 DOM。
+- `binding`：一个对象，包含以下 property：
+    - `name`：指令名，不包括 `v-` 前缀。
+    - `value`：指令的绑定值，例如：`v-my-directive="1 + 1"` 中，绑定值为 `2`。
+    - `oldValue`：指令绑定的前一个值，仅在 `update` 和 `componentUpdated` 钩子中可用。无论值是否改变都可用。
+    - `expression`：字符串形式的指令表达式。例如 `v-my-directive="1 + 1"` 中，表达式为 `"1 + 1"`。
+    - `arg`：传给指令的参数，可选。例如 `v-my-directive:foo` 中，参数为 `"foo"`。
+    - `modifiers`：一个包含修饰符的对象。例如：`v-my-directive.foo.bar` 中，修饰符对象为 `{ foo: true, bar: true }`。
+- `vnode`：Vue 编译生成的虚拟节点。
+- `oldVnode`：上一个虚拟节点，仅在 `update` 和 `componentUpdated` 钩子中可用。
+
+除了 `el` 之外，其它参数都应该是只读的，切勿进行修改。如果需要在钩子之间共享数据，建议通过元素的 `dataset` 来进行。
+
+#### 函数简写
+
+在很多时候，你可能想在 `bind` 和 `update` 时触发相同行为，而不关心其它的钩子。比如这样写：
+
+```js
+Vue.directive('color-swatch', function (el, binding) {
+  el.style.backgroundColor = binding.value
+})
+```
+
+### 渲染函数 & JSX
+
+#### 基础
+
+通常定义组件内容都是通过模板的方式，但有些时候不适合用模板，例如：
+
+```html
+<script type="text/x-template" id="anchored-heading-template">
+    <h1 v-if="level === 1">
+        <slot></slot>
+    </h1>
+    <h2 v-else-if="level === 2">
+        <slot></slot>
+    </h2>
+    <h3 v-else-if="level === 3">
+        <slot></slot>
+    </h3>
+    <h4 v-else-if="level === 4">
+        <slot></slot>
+    </h4>
+    <h5 v-else-if="level === 5">
+        <slot></slot>
+    </h5>
+    <h6 v-else-if="level === 6">
+        <slot></slot>
+    </h6>
+</script>
+```
+
+```js
+Vue.component('anchored-heading', {
+  template: '#anchored-heading-template',
+  props: {
+    level: {
+      type: Number,
+      required: true
+    }
+  }
+})
+```
+
+这种使用模板就会造成很多重复代码，这边只是想动态时候对于的标签，这边就比较时候用渲染函数
+
+```js
+Vue.component('anchored-heading', {
+    render: function (createElement) {
+        return createElement(
+            'h' + this.level,   // 标签名称
+            this.$slots.default // 子节点数组
+        )
+    },
+    props: {
+        level: {
+            type: Number,
+            required: true
+        }
+    }
+})
+```
+
+使用 `render` 代替原来的 `template` ，返回一个虚拟节点（`VNode`）进行渲染，`createElement` 函数用于创建一个 `VNode`，使用 JS 编程的方式编写模板能够更加灵活。
+
+这边的 `$slots.default` 就相当于 `<slot>` ，所有的插槽都会存在 `$slots` 里面。
+
+#### 节点、树、虚拟 DOM
+
+```html
+<div>
+    <h1>My title</h1>
+    Some text content
+    <!-- TODO: Add tagline -->
+</div>
+```
+
+Vue 收到这样一个 DOM 模板的时候，会将它解析成一个 DOM 节点树：
+
+![](https://cn.vuejs.org/images/dom-tree.png)
+
+
+每一个元素都是一个节点，每段文字也是一个节点，甚至注释也都是节点。一个节点就是页面的一个部分，就像家谱树一样，每个节点都可以有孩子节点。Vue 把每一个节点解析成一个虚拟节点（`VNode`），多个 `VNode` 根据父子关系组成节点树，也就是虚拟 DOM 。
+
+`createElement` 就是用来创建 `VNode` ，Vue 会根据 `VNode` 的数据变化，重新渲染对应的元素，而不是整个页面重新渲染。
+
+#### `createElement` 参数
+
+```js
+// @returns {VNode}
+createElement(
+  // {String | Object | Function}
+  // 一个 HTML 标签名、组件选项对象，或者
+  // resolve 了上述任何一种的一个 async 函数。必填项。
+  'div',
+
+  // {Object}
+  // 一个与模板中 attribute 对应的数据对象。可选。非对象视为 VNodes
+  {
+    // (详情见下一节)
+  },
+
+  // {String | Array}
+  // 子级虚拟节点 (VNodes)，由 `createElement()` 构建而成，
+  // 也可以使用字符串来生成“文本虚拟节点”。可选。
+  [
+    '先写一些文字',
+    createElement('h1', '一则头条'),
+    createElement(MyComponent, {
+      props: {
+        someProp: 'foobar'
+      }
+    })
+  ]
+)
+```
+
+数据对象：
+
+```js
+{
+  // 与 `v-bind:class` 的 API 相同，
+  // 接受一个字符串、对象或字符串和对象组成的数组
+  'class': {
+    foo: true,
+    bar: false
+  },
+  // 与 `v-bind:style` 的 API 相同，
+  // 接受一个字符串、对象，或对象组成的数组
+  style: {
+    color: 'red',
+    fontSize: '14px'
+  },
+  // 普通的 HTML attribute
+  attrs: {
+    id: 'foo'
+  },
+  // 组件 prop
+  props: {
+    myProp: 'bar'
+  },
+  // DOM property
+  domProps: {
+    innerHTML: 'baz'
+  },
+  // 事件监听器在 `on` 内，
+  // 但不再支持如 `v-on:keyup.enter` 这样的修饰器。
+  // 需要在处理函数中手动检查 keyCode。
+  on: {
+    click: this.clickHandler
+  },
+  // 仅用于组件，用于监听原生事件，而不是组件内部使用
+  // `vm.$emit` 触发的事件。
+  nativeOn: {
+    click: this.nativeClickHandler
+  },
+  // 自定义指令。注意，你无法对 `binding` 中的 `oldValue`
+  // 赋值，因为 Vue 已经自动为你进行了同步。
+  directives: [
+    {
+      name: 'my-custom-directive',
+      value: '2',
+      expression: '1 + 1',
+      arg: 'foo',
+      modifiers: {
+        bar: true
+      }
+    }
+  ],
+  // 作用域插槽的格式为
+  // { name: props => VNode | Array<VNode> }
+  scopedSlots: {
+    default: props => createElement('span', props.text)
+  },
+  // 如果组件是其它组件的子组件，需为插槽指定名称
+  slot: 'name-of-slot',
+  // 其它特殊顶层 property
+  key: 'myKey',
+  ref: 'myRef',
+  // 如果你在渲染函数中给多个元素都应用了相同的 ref 名，
+  // 那么 `$refs.myRef` 会变成一个数组。
+  refInFor: true
+}
+```
+
+组件树中的所有 VNode 必须是唯一的。这意味着，下面的渲染函数是不合法的：
+
+```js
+render: function (createElement) {
+  var myParagraphVNode = createElement('p', 'hi')
+  return createElement('div', [
+    // 错误 - 重复的 VNode
+    myParagraphVNode, myParagraphVNode
+  ])
+}
+```
+
+如果你真的需要重复很多次的元素/组件，你可以使用工厂函数来实现。例如，下面这渲染函数用完全合法的方式渲染了 20 个相同的段落：
+
+```js
+render: function (createElement) {
+  return createElement('div',
+    Array.apply(null, { length: 20 }).map(function () {
+      return createElement('p', 'hi')
+    })
+  )
+}
+```
+
+#### 使用 JS 代替模板功能
+
+- `v-if` 、 `v-for`：用 `if` 语句 和 `for` 语句代替，或数组的 `.map()` 方法
+- `v-model`：用 JS 逻辑实现代替
+- 事件修饰符：
+    - `.passive`：`&`
+    - `.capture`：`!`
+    - `.once`：`~`
+    - `.capture.once` 或 `.once.capture`：`~!`
+    
+    例如：
+
+    ```js
+    on: {
+        '!click': this.doThisInCapturingMode,
+        '~keyup': this.doThisOnce,
+        '~!mouseover': this.doThisOnceInCapturingMode
+    }
+    ```
+
+    其他修饰符自己实现。
+
+- `<slot>`：`$slots.default`
+- `<slot :text="msg">`：`$scopedSlots.default({ text: this.msg })`
+
+#### 函数式组件
+
+使用 `functional` 选项可将组件标记为函数式组件，作为函数式组件就意味着没有状态、没有实例。
+
+```js
+Vue.component('my-component', {
+    functional: true,
+    // Props 是可选的
+    props: {
+        // ...
+    },
+    // 为了弥补缺少的实例
+    // 提供第二个参数作为上下文
+    render: function (createElement, context) {
+            // ...
+    }
+})
+```
+
+单文件组件中
+
+```html
+<template functional>
+</template>
+```
+
+组件的一切都是通过 `context` 参数传递，它是一个包括如下字段的对象：
+
+- `props`：提供所有 prop 的对象
+- `children`：VNode 子节点的数组
+- `slots`：一个函数，返回了包含所有插槽的对象
+- `scopedSlots`： 一个暴露传入的作用域插槽的对象。也以函数形式暴露普通插槽。
+- `data`：传递给组件的整个数据对象，作为 createElement 的第二个参数传入组件
+- `parent`：对父组件的引用
+- `listeners`：一个包含了所有父组件为当前组件注册的事件监听器的对象。这是 data.on 的一个别名。
+- `injections`：如果使用了 inject 选项，则该对象包含了应当被注入的 property。
+
+使用函数式组件后，`this.$slots.default` 更新为 `context.children` ，`this.level` 更新为 `context.props.level`
+
+使用函数式组件传递属性和事件时，可以直接把整个 context 传下去：
+
+```js
+Vue.component('my-functional-button', {
+    functional: true,
+    render: function (createElement, context) {
+        // 完全透传任何 attribute、事件监听器、子节点等。
+        return createElement('button', context.data, context.children)
+    }
+})
+```
+
+### 插件
+
+插件通常用来为 Vue 添加全局功能。插件的功能范围没有严格的限制——一般有下面几种：
+
+1. 添加全局方法或者 property。如：vue-custom-element
+2. 添加全局资源：指令/过滤器/过渡等。如 vue-touch
+3. 通过全局混入来添加一些组件选项。如 vue-router
+4. 添加 Vue 实例方法，通过把它们添加到 Vue.prototype 上实现。
+5. 一个库，提供自己的 API，同时提供上面提到的一个或多个功能。如 vue-router
+
+#### 使用插件
+
+通过全局方法 Vue.use() 使用插件。它需要在你调用 new Vue() 启动应用之前完成：
+
+```js
+// 调用 `MyPlugin.install(Vue)`
+Vue.use(MyPlugin)
+
+new Vue({
+  // ...组件选项
+})
+```
+
+也可以传入一个可选的选项对象：
+
+```js
+Vue.use(MyPlugin, { someOption: true })
+```
+
+`Vue.use` 会自动阻止多次注册相同插件，届时即使多次调用也只会注册一次该插件。
+
+####　开发插件
+
+Vue.js 的插件应该暴露一个 install 方法。这个方法的第一个参数是 Vue 构造器，第二个参数是一个可选的选项对象：
+
+```js
+MyPlugin.install = function (Vue, options) {
+  // 1. 添加全局方法或 property
+  Vue.myGlobalMethod = function () {
+    // 逻辑...
+  }
+
+  // 2. 添加全局资源
+  Vue.directive('my-directive', {
+    bind (el, binding, vnode, oldVnode) {
+      // 逻辑...
+    }
+    ...
+  })
+
+  // 3. 注入组件选项
+  Vue.mixin({
+    created: function () {
+      // 逻辑...
+    }
+    ...
+  })
+
+  // 4. 添加实例方法
+  Vue.prototype.$myMethod = function (methodOptions) {
+    // 逻辑...
+  }
+}
+```
+
+### 过滤器
+
+过滤器通常用于文本格式化，可应用在双花括号插值和 `v-bind` 表达式中。
+
+```html
+<!-- 在双花括号中 -->
+{{ message | capitalize }}
+
+<!-- 在 `v-bind` 中 -->
+<div v-bind:id="message | capitalize"></div>
+```
+
+局部定义
+
+```js
+filters: {
+    capitalize: function (value) {
+        if (!value) return ''
+        value = value.toString()
+        return value.charAt(0).toUpperCase() + value.slice(1)
+    }
+}
+```
+
+全局定义
+
+```js
+Vue.filter('capitalize', function (value) {
+    // ...
+})
+```
+
+局部过滤器和全局过滤器重名时使用局部过滤器。
+
+过滤器可以串联使用：
+
+```js
+{{ message | filterA | filterB }}
+// 等价于
+{{ filterB(filterA(message)) }}
+```
+
+过滤器可以传参
+
+```js
+{{ message | filterA('arg1', arg2) }}
+// 等价于
+{{ filterA(message, 'arg1', arg2) }}
+```
