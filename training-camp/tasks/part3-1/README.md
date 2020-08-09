@@ -61,6 +61,6 @@ Vue 只会对初始化的 data 数据设置响应式，对于新增的成员都�
 
 ### 3、参考 Snabbdom 提供的电影列表的示例，利用Snabbdom 实现类似的效果，如图：
 
-![](https://s0.lgstatic.com/i/image/M00/26/F2/Ciqc1F7zUZ-AWP5NAAN0Z_t_hDY449.png)
+![](https://jencia.github.io/images/blog/training-camp/tasks/part3-1_2-3.png)
 
 答案请看 [code/todolist-snabbdom](./code/todolist-snabbdom)
