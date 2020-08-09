@@ -1,0 +1,81 @@
+body {
+    background: #222;
+}
+.todo-list {
+    max-width: 1000px;
+    margin: 0 auto;
+    color: #fcf5d2;
+
+    h1 {
+        font-size: 40px;
+        margin: 1.5;
+    }
+    .table-operation {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+
+        .tabs-container {
+            display: flex;
+            align-items: center;
+
+            ul {
+                display: flex;
+                list-style: none;
+                padding: 0;
+                margin: 0;
+
+                li {
+                    &:nth-of-type(n + 2) {
+                        border-left: 1px solid #111
+                    }
+                    &.active {
+                        background: #fcf5d2;
+                        color: #333;
+                    }
+                }
+            }
+        }
+        .btn {
+            background: #000;
+            padding: 0 12px;
+            border: none;
+            outline: none;
+            cursor: pointer;
+            color: #999;
+            line-height: 30px;
+            &:hover { background: #060606 }
+            &:active { background: #111111 }
+        }
+    }
+    .table {
+        margin-top: 20px;
+        .row {
+            position: relative;
+            display: flex;
+            align-items: center;
+            background: #000;
+            padding: 20px;
+            margin-bottom: 8px;
+        }
+        .col {
+            &:nth-of-type(1) { width: 60px }
+            &:nth-of-type(2) { width: 120px }
+            &:nth-of-type(3) { flex: 1 }
+        }
+        .del {
+            position: absolute;
+            right: 0;
+            top: -8px;
+            width: 30px;
+            height: 30px;
+            font-size: 20px;
+            text-align: center;
+            line-height: 40px;
+            cursor: pointer;
+            &:hover {
+                color: rgb(57, 242, 255);
+            }
+        }
+    }
+}
