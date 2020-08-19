@@ -30,7 +30,8 @@ training-camp/
 - `2020-07-10` part2-1：开发脚手架及封装自动化构建工作流（上）
 - `2020-07-17` part2-1：开发脚手架及封装自动化构建工作流（下）
 - `2020-07-23` part2-2：模块化开发与规范化标准
-- `2020-08-05` part3-1：手写 Vue Router、手写响应式实现、虚拟 DOM 和 Diff 算法（上）
+- `2020-08-05` part3-1：手写 Vue Router、手写响应式实现、虚拟 DOM 和 Diff 算法
+- `2020-08-20` part3-2：Vue.js 源码分析（响应式、虚拟 DOM、模板编译和组件化）
 
 ## 笔记作业
 
@@ -39,3 +40,4 @@ training-camp/
 - part2-1：[脚手架工具](./notes/part2-1/Scaffolding.md)、[Gulp](./notes/part2-1/Gulp.md)、[作业](./tasks/part2-1/README.md)
 - part2-2：[ES Module](./notes/part2-2/ESModule.md)、[Webpack](./notes/part2-2/Webpack.md)、[Rollup](./notes/part2-2/Rollup.md)、[ESLint](./notes/part2-2/ESLint.md)、[作业](./tasks/part2-2/README.md)
 - part3-1：[Vue 2.x 学习](./notes/part3-1/VueStudy.md)、[vue-cli 学习](./notes/part3-1/VueCLIStudy.md)、[vue-loader 学习](./notes/part3-1/VueLoaderStudy.md)、[vue-router 学习](./notes/part3-1/VueRouterStudy.md)、[作业](./tasks/part3-1/README.md)
+- part3-2：[作业](./tasks/part3-2/README.md)
