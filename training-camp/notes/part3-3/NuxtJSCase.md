@@ -274,3 +274,169 @@ export function register (data) {
     })
 }
 ```
+
+## 登录/注册
+
+### 页面联调
+
+`components/Auth.vue`
+
+```js
+export default {
+    // ...
+    computed: {
+        isLogin () {
+            return this.$route.name === 'login'
+        }
+    }
+    // ...
+}
+```
+
+通过路由判断是登录页还是注册页，后续通过 `isLogin` 来处理登录和注册的不同逻辑。
+
+```js
+export default {
+    data () {
+        return {
+            user: {
+                username: '',
+                email: '',
+                password: ''
+            },
+            loading: false,
+            errors: null
+        };
+    },
+    // ...
+}
+```
+
+状态数据设计：
+
+- `user` 用来收集用户填写的表单数据，数据结构与接口入参结构保持一致；
+- `loading` 提交数据时，改为 `true` ，按钮禁用，防止重复提交，提交调用结束后再改回 `false` ；
+- `errors` 用来展示错误信息，表单提交时接口发生异常，将异常信息赋值给 `errors` ，一遍是表单校验失败的错。
+
+```html
+<form @submit.prevent="handleSubmit">
+    ...
+</form>
+```
+
+使用 `<form>` 的 `submit` 事件触发表单提交事件 ，同时在 `methods` 里增加 `handleSubmit` 方法。
+
+```js
+import { register, login } from '@/api/user'
+
+async handleSubmit () {
+    try {
+        this.loading = true
+        // login 和 register 方法是之前定义的网络请求方法
+        const res = await (this.isLogin ? login : register)({ user: this.user })
+        const { user } = res.data || {}     // 获取后端返回的数据
+
+        this.errors = null	    // 重置错误信息
+        this.$store.commit('setUser', user) // 将数据存到 vuex 里
+        this.$router.push('/')  // 登录或注册完成跳转到首页
+    } catch (e) {
+        this.errors = e.response.data.errors
+    } finally {
+        this.loading = false
+    }
+}
+```
+
+### 数据持久化
+
+登录后会返回用户信息，用户信息在很多页面都需要用到，所以需要存在 vuex 里。
+
+存在 vuex 的数据页面刷新完就不见了，就要重新登录，为了让登录状态可以一直保留下去，需要做数据持久化。 由于这数据在客户端和服务端都能访问，所以使用 cookie 存储。
+
+创建 `store/index.js` 文件，NuxtJS 会自动导入 `store` 目录下的 vuex 文件。
+
+```js
+import cookie from 'js-cookie'           // 客户端操作 cookie
+import cookieParser from 'cookieparser'  // 服务端解析 cookie
+
+// state、mutations、actions 都要分别导出，且 state 要使用函数
+
+export const state = () => ({
+    user: null
+})
+
+export const mutations = {
+    setUser (state, payload) {
+        cookie.set('user', payload) // 将数据存到 cookie 里
+        state.user = payload
+    }
+}
+
+export const actions = {
+    // 一个特殊的方法，名称固定，NuxtJS 服务端渲染前会调用这个方法
+    nuxtServerInit ({ commit }, { req }) {
+        let user = null
+
+        if (req.headers.cookie) {
+            // 在服务端解析获取 cookie
+            const parsed = cookieParser.parse(req.headers.cookie || '')
+
+            try {
+                // 获取 cookie 上存储的 user，可能拿不到，所以包一个 try…catch
+                user = JSON.parse(parsed.user)
+            } catch (e) {}
+        }
+
+        // 数据提交给 vuex
+        commit('setUser', user)
+    }
+}
+```
+
+### 权限控制
+
+1. 操作权限控制
+
+头部菜单没登录时只展示首页、登录、注册，登录后展示首页、写文章、设置、个人中心，拿 vuex 的 user 判断是否已经登录。
+
+2. 访问权限控制
+
+为防止用户通过页面访问地址直接访问，需要设置访问权限。NuxtJS 提交了一个中间件的概念用来解决这类问题：
+
+创建 `middleware/authenticated.js` 文件：
+
+```js
+export default function ({ store, redirect }) {
+    // 用户信息没值时重定向到登录页
+    if (!store.state.user) {
+        redirect('/login')
+    }
+}
+```
+
+```html
+<template>
+	...
+</template>
+<script>
+export default {
+    name: 'Settings',
+    middleware: 'authenticated'
+}
+</script>
+```
+
+中间件固定存放在 `middleware` 文件夹里，一个中间件一个文件。使用 `middleware` 属性使用中间件，中间件的名字就是文件名。
+
+以上代码的意思时给设置页设置访问权限，没登录时跳转到登录页。
+
+没登录时不能访问的是：
+
+- 文章发布/编辑页
+- 设置页
+- 个人中心页
+
+登录后不能访问的是：
+
+- 登录页
+- 注册页
