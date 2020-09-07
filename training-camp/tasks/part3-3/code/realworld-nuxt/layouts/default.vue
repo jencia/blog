@@ -5,8 +5,7 @@
                 <nuxt-link class="navbar-brand" to="/">conduit</nuxt-link>
                 <ul class="nav navbar-nav pull-xs-right">
                     <template class="nav-item" v-for="item in menus">
-                        <li :key="item.path" class="nav-item">
-                            <!-- Add "active" class when you're on that page" -->
+                        <li :key="item.path" v-if="item.path !== '/profile'" class="nav-item">
                             <nuxt-link
                                 class="nav-link"
                                 :class="$route.path === item.path ? 'active' : ''"
@@ -14,6 +13,16 @@
                             >
                                 <i :class="item.icon" v-if="item.icon"></i>
                                 {{ item.name }}
+                            </nuxt-link>
+                        </li>
+                        <li class="nav-item" v-else :key="item.path">
+                            <nuxt-link
+                                class="nav-link"
+                                :class="$route.path === 'profile' ? active : ''"
+                                :to="`/profile/${user.id}`"
+                            >
+                                <img :src="user.image" class="user-pic">
+                                {{ user.username }}
                             </nuxt-link>
                         </li>
                     </template>
@@ -33,33 +42,46 @@
 </template>
 
 <script>
+import { mapState } from 'vuex'
+
 export default {
     name: 'DefaultLayout',
-    data () {
-        return {
-            menus: [
+    computed: {
+        ...mapState(['user']),
+        menus () {
+            const isLogin = !!this.$store.state.user
+
+            return [
                 {
                     name: '首页',
                     path: '/'
                 },
-                {
-                    name: '写文章',
-                    path: '/editor',
-                    icon: 'ion-compose'
-                },
-                {
-                    name: '设置',
-                    path: '/settings',
-                    icon: 'ion-gear-a'
-                },
-                {
-                    name: '登录',
-                    path: '/login'
-                },
-                {
-                    name: '注册',
-                    path: '/register'
-                }
+                ...(isLogin ? [
+                    {
+                        name: '写文章',
+                        path: '/editor',
+                        icon: 'ion-compose'
+                    },
+                    {
+                        name: '设置',
+                        path: '/settings',
+                        icon: 'ion-gear-a'
+                    },
+                    {
+                        name: '个人中心',
+                        path: '/profile'
+                    }
+                ] : [
+                    {
+                        name: '登录',
+                        path: '/login'
+                    },
+                    {
+                        name: '注册',
+                        path: '/register'
+                    }
+                ])
+                
             ]
         }
     }

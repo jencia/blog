@@ -9,25 +9,29 @@
                         <nuxt-link to="register" v-if="isLogin">还没有账号？</nuxt-link>
                         <nuxt-link to="/login" v-else>已经有账号了？</nuxt-link>
                     </p>
-
-                    <ul class="error-messages">
-                        <li>That email is already taken</li>
+                    
+                    <ul class="error-messages" v-if="errors">
+                        <template v-for="field in Object.keys(errors)">
+                            <li v-for="msg in errors[field]" :key="field + msg">{{ field + msg }}</li>
+                        </template>
                     </ul>
 
-                    <form @submit.prevent="isLogin ? login() : register()">
+                    <form @submit.prevent="handleSubmit">
                         <fieldset class="form-group" v-if="!isLogin">
                             <input
                                 class="form-control form-control-lg"
                                 type="text"
                                 placeholder="请输入你的名称"
-                                v-model="username"
+                                v-model="user.username"
+                                required
                             >
                         </fieldset>
                         <fieldset class="form-group">
                             <input
                                 class="form-control form-control-lg" type="text"
                                 placeholder="请输入邮件地址"
-                                v-model="email"
+                                v-model="user.email"
+                                required
                             >
                         </fieldset>
                         <fieldset class="form-group">
@@ -35,10 +39,12 @@
                                 class="form-control form-control-lg"
                                 type="password"
                                 placeholder="请输入密码"
-                                v-model="password"
+                                v-model="user.password"
+                                required
+                                minlength="8"
                             >
                         </fieldset>
-                        <button class="btn btn-lg btn-primary pull-xs-right">
+                        <button class="btn btn-lg btn-primary pull-xs-right" :disabled="loading">
                             {{ isLogin ? '登录' : '注册' }}
                         </button>
                     </form>
@@ -50,15 +56,19 @@
 </template>
  
 <script>
-import { register } from '@/api/user';
+import { register, login } from '@/api/user'
 
 export default {
     name: 'Auth',
     data () {
         return {
-            username: '',
-            email: '',
-            password: ''
+            user: {
+                username: '',
+                email: '',
+                password: ''
+            },
+            loading: false,
+            errors: null
         };
     },
     computed: {
@@ -67,11 +77,20 @@ export default {
         }
     },
     methods: {
-        login () {},
-        async register () {
-            const res = await register({ user: this.$data })
-
-            console.log(res)
+        async handleSubmit () {
+            try {
+                this.loading = true
+                const res = await (this.isLogin ? login : register)({ user: this.user })
+                const { user } = res.data || {}
+                
+                this.errors = null
+                this.$store.commit('setUser', user)
+                this.$router.push('/')
+            } catch (e) {
+                this.errors = e?.response?.data?.errors
+            } finally {
+                this.loading = false
+            }
         }
     }
 }
