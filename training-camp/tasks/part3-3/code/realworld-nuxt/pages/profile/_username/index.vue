@@ -6,7 +6,7 @@
 import Profile from '@/components/Profile';
 
 export default {
-    name: 'MyArticle',
+    name: 'profile',
     middleware: 'authenticated',
     components: { Profile }
 }
