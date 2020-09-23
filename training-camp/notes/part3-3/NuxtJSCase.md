@@ -212,11 +212,11 @@ export default {
 ```
 pages
 ├─ article/
-│   └─ _article_id.vue 
+│   └─ _slug.vue 
 ├─ editor/
-│   └─ _article_id.vue 
+│   └─ _slug.vue 
 ├─ profile/
-│   ├─ _user_id/
+│   ├─ _username/
 │   │     ├─ favorites.vue
 │   │     └─ index.vue 
 │   └─ index.vue 
@@ -316,7 +316,7 @@ export default {
 
 - `user` 用来收集用户填写的表单数据，数据结构与接口入参结构保持一致；
 - `loading` 提交数据时，改为 `true` ，按钮禁用，防止重复提交，提交调用结束后再改回 `false` ；
-- `errors` 用来展示错误信息，表单提交时接口发生异常，将异常信息赋值给 `errors` ，一遍是表单校验失败的错。
+- `errors` 用来展示错误信息，表单提交时接口发生异常，将异常信息赋值给 `errors` ，这便是表单校验失败的错。
 
 ```html
 <form @submit.prevent="handleSubmit">
@@ -436,7 +436,160 @@ export default {
 - 设置页
 - 个人中心页
 
+登录后同样也有些页面无法访问，需要创建另外一个中间件：`middleware/notAuthenticated.js`
+
+```js
+export default function ({ store, redirect }) {
+    // user 有值时代表已登录，访问不该访问的页面重定向到首页
+    if (store.state.user) {
+        redirect('/')
+    }
+}
+```
+
 登录后不能访问的是：
 
 - 登录页
 - 注册页
+
+## 首页开发
+
+### 文章列表联调
+
+新建一个 `api/article.js` 文件，设置获取文章列表接口方法：
+
+```js
+import request from '@/utils/request'
+
+export function getArticles (params) {
+    return request({
+        method: 'GET',
+        url: '/api/articles',
+        params
+    })
+}
+```
+
+在 asyncData 方法内调用接口方法，返回结果
+
+```js
+export default {
+    // ...
+    async asyncData () {
+        const { data } = await getArticles()
+
+        return {
+            articles: data.articles,
+            articlesCount: data.articlesCount
+        }
+    },
+}
+```
+
+接口数据返回结果可以到 [这里](https://github.com/gothinkster/realworld/tree/master/api#multiple-articles) 查看数据结构，也可以把 data 打印出来，或者在 Vue devtools 查看返回的状态数据。
+
+联调说明：
+
+- 根据数据名称填入对应的位置
+- `slug` 属性为文章的 id，进入文章详情可传 `slug` 作为唯一 ID
+- 进入用户中心通过传入用户名 `article.author.username` 作为唯一 ID
+- 将 `<a>` 标签转为 `<nuxt-link>`
+- 是否点赞和是否是当前页码的样式通过设置 class 为 `active` 控制。
+- 时间格式的转化可引入 `dayjs` 模块通过过滤器控制。
+
+### 分页处理
+
+文章列表部分缺少分页器的代码，可到 [Demo 页面](https://demo.realworld.io/#/) 拷贝分页器部分的内容，删掉没有的代码留下以下代码：
+
+```html
+<nav>
+    <ul class="pagination">
+        <li class="page-item active">
+            <a class="page-link">1</a>
+        </li>
+    </ul>
+</nav>
+```
+
+放在文章列表内容部分（ class 名为 `article-preview` 的）后面。
+
+设置数据状态：
+
+- `page` 当前页码，从路由的 query 属性里取，取不到就默认为 1
+- `limit` 每页显示的条数，固定为 10
+
+接口的分页是通过传入 `limit` 和 `offset` 属性来控制，每页显示的条数和偏移量（即当页第一条数据的位置），偏移量可以通过 `page` 值和 `limit` 值算出。最终 `asyncData` 方法可以改成如下：
+
+```js
+export default {
+    // ...
+    async asyncData (context) {
+        const limit = 10
+        // query 取到的是字符串，前面加 "+" 是为了转成 number 类型
+        const page = +(context.query.page || 1)
+        const { data } = await getArticles({
+            limit,
+            offset: (page - 1) * limit
+        })
+
+        return {
+            limit,
+            page,
+            articles: data.articles,
+            articlesCount: data.articlesCount
+        }
+    },
+}
+```
+
+分页器的总页数通过 `articlesCount` 和 `limit` 算出：
+
+```js
+export default {
+    // ...
+    computed: {
+        totalPage () {
+            return Math.floor(this.articlesCount / this.limit)
+        }
+    },
+}
+```
+
+由于 `v-for` 可以进行数字的遍历，所以可以通过遍历 `totalPage` 值来展示分页器的各个页码。页码的链接跳转到当前页，只是需要传 `page` 参数，最终分页器的代码如下：
+
+```html
+<nav>
+    <ul class="pagination">
+        <li
+            v-for="num in totalPage"
+            :key="num"
+            class="page-item"
+            :class="{ active: num === page }"
+        >
+            <nuxt-link class="page-link" :to="`/?page=${num}`">
+                {{ num }}
+            </nuxt-link>
+        </li>
+    </ul>
+</nav>
+```
+
+这时候你去点击页码，你会发现文章列表数据并没有变化，但当你刷新下页面，是能展示对应的文章数据。这是页面跳转走的是前端渲染，并不会去重新调用 `asyncData` 方法，就导致数据还是旧的。只有走服务端渲染的时候才会去调 `asyncData` 方法。为了解决这种场景，NuxtJS 提供了一个 `watchQuery` 属性用来监听地址是的查询参数，使用方式如下：
+
+```diff
+export default {
+    ...
+    async asyncData (context) {
+        ...
+    },
++   watchQuery: ['page'],
+    computed: {
+        ...
+    }
+}
+```
+
+这时候当检测到查询参数里的 `page` 值发生变化就会去调 `asyncData` 方法，就能得到期望的数据。
+
+
+
