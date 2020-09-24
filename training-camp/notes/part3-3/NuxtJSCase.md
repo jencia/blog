@@ -591,5 +591,68 @@ export default {
 
 这时候当检测到查询参数里的 `page` 值发生变化就会去调 `asyncData` 方法，就能得到期望的数据。
 
+### 标签处理
+
+标签处理大部分沿用 "分页处理" 的思路，需要注意的有以下几点：
+
+- 标签的引入使得 `asyncData` 需要多调用一个接口，多个互不依赖的接口可以通过 Promise.all 并行请求。
+- 分页的点击链接需要多传一个 `tag` 参数
+
+### 导航选项卡处理
+
+选项卡包括 “我的收藏”、“全部文章”、“标签文章”，其中 “我的收藏” 是登录后才能看到，“标签文章” 是搜索指定标签才展示，并且文章内容为 `#` + 标签名。由此选项卡的数据可以这样写：
+
+```js
+export default {
+    // ...
+    computed: {
+        // ...
+        tabsOptions () {
+            const options = [{ label: '全部文章', value: 'global_feed' }]
+
+            this.user && options.unshift({ label: '我的收藏', value: 'you_feed' })
+            this.tag && options.push({ label: `# ${this.tag}`, value: 'tag' })
+            return options
+        }
+    }
+}
+```
+
+`this.user` 是通过 Vuex 的 `mapState` 注入的数据，登录后才会有数据，没登录的话就是 `null `。
+
+`this.tag` 是像 `page` 数据一样从地址上的查询参数取到。
+
+视图上的调整如下：
+
+```html
+<div class="feed-toggle">
+    <ul class="nav nav-pills outline-active">
+        <li class="nav-item" v-for="item in tabsOptions" :key="item.value">
+            <nuxt-link
+                class="nav-link"
+                :class="{ active: item.value === tab }"
+                :to="{
+                    path: '/',
+                    query: {
+                        tab: item.value,
+                        tag: item.value === 'tag' ? tag : undefined
+                    }
+                }"
+            >
+                {{ item.label }}
+            </nuxt-link>
+        </li>
+    </ul>
+</div>
+```
+
+切换 Tab 时查询参数传入 `tab` 和 `tag` ，当 Tab 不是处于标签文章时不传递 `tag` 值，值设置为 `undefined` 就意味着 `tag` 参数会被过滤。
+
+关于 `page`、`tab`、`tag` 三个参数的变化逻辑：
+
+- 点击选项卡时，传入 `tab` ，当选项卡是标签文章时多传一个 `tag`
+- 点击标签时，传入 `tab` 和 `tag` ，其中 `tab` 的值固定是 `'tag'`
+- 点击分页时，传入 `page`、`tag`、`tab`，其中如果 `tag` 为 `undefined` 将忽略 `tag`
+
 
 

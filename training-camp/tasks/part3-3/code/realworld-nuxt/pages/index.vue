@@ -15,21 +15,19 @@
                 <div class="feed-toggle">
                     <ul class="nav nav-pills outline-active">
                         <li class="nav-item" v-for="item in tabsOptions" :key="item.value">
-                            <template v-if="item.value === 'you_feed' ? user : true">
-                                <nuxt-link
-                                    class="nav-link"
-                                    :class="{ active: item.value === tab }"
-                                    :to="{
-                                        path: '/',
-                                        query: {
-                                            tab: item.value,
-                                            tag: item.value === 'tag' ? tag : undefined
-                                        }
-                                    }"
-                                >
-                                    {{ item.label }}
-                                </nuxt-link>                                
-                            </template>
+                            <nuxt-link
+                                class="nav-link"
+                                :class="{ active: item.value === tab }"
+                                :to="{
+                                    path: '/',
+                                    query: {
+                                        tab: item.value,
+                                        tag: item.value === 'tag' ? tag : undefined
+                                    }
+                                }"
+                            >
+                                {{ item.label }}
+                            </nuxt-link>
                         </li>
                     </ul>
                 </div>
@@ -156,11 +154,9 @@ export default {
             return Math.floor(this.articlesCount / this.limit)
         },
         tabsOptions () {
-            const options = [
-                { label: '我的资源', value: 'you_feed' },
-                { label: '全部资源', value: 'global_feed' },
-            ]
+            const options = [{ label: '全部文章', value: 'global_feed' }]
 
+            this.user && options.unshift({ label: '我的收藏', value: 'you_feed' })
             this.tag && options.push({ label: `# ${this.tag}`, value: 'tag' })
             return options
         },
