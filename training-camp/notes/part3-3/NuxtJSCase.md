@@ -216,10 +216,7 @@ pages
 ├─ editor/
 │   └─ _slug.vue 
 ├─ profile/
-│   ├─ _username/
-│   │     ├─ favorites.vue
-│   │     └─ index.vue 
-│   └─ index.vue 
+│   └─ _username.vue
 ├─ index.vue
 ├─ login.vue
 ├─ register.vue
@@ -229,7 +226,6 @@ pages
 从模板那复制相应的代码到对应页面里。不过有些页面模板的一样的，就需要提取到公共组件里，再引用同一个组件。
 
 - login 和 register 内容一样，提取出 `components/Auth.vue` 组件
-- profile 里的 index 和 favorites 内容一样，提取出 `component/Profile.vue` 组件
 
 ## 封装请求模块和方法
 
@@ -600,7 +596,7 @@ export default {
 
 ### 导航选项卡处理
 
-选项卡包括 “我的收藏”、“全部文章”、“标签文章”，其中 “我的收藏” 是登录后才能看到，“标签文章” 是搜索指定标签才展示，并且文章内容为 `#` + 标签名。由此选项卡的数据可以这样写：
+选项卡包括 “关注”、“推荐”、“标签”，其中 “关注” 是登录后才能看到，“标签” 是搜索指定标签才展示，并且文章内容为 `#` + 标签名。由此选项卡的数据可以这样写：
 
 ```js
 export default {
@@ -608,9 +604,9 @@ export default {
     computed: {
         // ...
         tabsOptions () {
-            const options = [{ label: '全部文章', value: 'global_feed' }]
+            const options = [{ label: '推荐', value: 'global_feed' }]
 
-            this.user && options.unshift({ label: '我的收藏', value: 'you_feed' })
+            this.user && options.unshift({ label: '关注', value: 'you_feed' })
             this.tag && options.push({ label: `# ${this.tag}`, value: 'tag' })
             return options
         }
@@ -620,7 +616,7 @@ export default {
 
 `this.user` 是通过 Vuex 的 `mapState` 注入的数据，登录后才会有数据，没登录的话就是 `null `。
 
-`this.tag` 是像 `page` 数据一样从地址上的查询参数取到。
+`this.tag` 是在 `asyncData` 里定义的，通过地址上的查询参数取到值。
 
 视图上的调整如下：
 
@@ -646,13 +642,219 @@ export default {
 </div>
 ```
 
-切换 Tab 时查询参数传入 `tab` 和 `tag` ，当 Tab 不是处于标签文章时不传递 `tag` 值，值设置为 `undefined` 就意味着 `tag` 参数会被过滤。
+切换 Tab 时查询参数传入 `tab` 和 `tag` ，当 Tab 不是处于标签时不传递 `tag` 值，值设置为 `undefined` 就意味着 `tag` 参数会被过滤。
 
 关于 `page`、`tab`、`tag` 三个参数的变化逻辑：
 
-- 点击选项卡时，传入 `tab` ，当选项卡是标签文章时多传一个 `tag`
+- 点击选项卡时，传入 `tab` ，当选项卡是标签时多传一个 `tag`
 - 点击标签时，传入 `tab` 和 `tag` ，其中 `tab` 的值固定是 `'tag'`
 - 点击分页时，传入 `page`、`tag`、`tab`，其中如果 `tag` 为 `undefined` 将忽略 `tag`
 
+### 统一设置用户 Token
 
+导航选项卡里“关注”所调用的数据跟其他两个都不一样，这边展示的是当前用户的收藏数据，所以这边请求逻辑需要调整下：
 
+```js
+export default {
+    async asyncData () {
+        // ...
+        const loaderArticles = tab === 'you_feed' ? getArticlesFeed : getArticles
+
+        const [articleRes, tagData] = await Promise.all([
+            loaderArticles({ tag, limit, offset: (page - 1) * limit }),
+            getTags()
+        ])
+        // ...
+    }
+}
+```
+
+`getArticlesFeed` 调用的接口地址是 `/api/articles/feed` 。
+
+如果用之前的写法去调用接口，这时会报 `401` 错误。原因是因为 `/api/articles/feed` 接口需要知道你是哪个用户，所以需要传递用户 Token ，接口说明注明了 Token 的传值方式是请求时设置一个 headers 数据，键为 `Authorization` ，值的格式为 `Token 你的Token数据` ，例如 `Token adadadadada...`。
+
+设置 Token 可以借助 axios 的拦截器机制实现，每一个请求都设置 Token 值，修改 `utils/request.js` 文件
+
+```js
+// ...
+request.interceptors.request.use(config => {
+    config.headers.Authorization = 'Token 你的Token'
+
+    return config
+})
+// ...
+```
+
+这边是能统一设置 Token ，但是这里 Token 值并不知道。Token 是在用户信息里获取的，而用户信息又是存在 Vuex 里的，所以想要拿到 Token 就需要注入 Vuex 的数据。
+
+NuxtJS 为我们提供了 [插件机制](https://zh.nuxtjs.org/guide/plugins) ，在运行 Vue 应用之前会执行插件。通俗的说就是定义一个函数，NuxtJS 会帮你先运行这个函数，再去执行 Vue 代码，也就会在 asyncData 函数之前执行，因此我们可以在 asyncData 调用之前注入一些数据或做一些逻辑处理。
+
+插件可以拿到上下文对象，也就可以拿到 Vuex 数据，所以请求拦截器可以在插件里处理。创建 `plugins/request.js`：
+
+```js
+import axios from 'axios'
+
+export const request = axios.create({
+    baseURL: 'https://conduit.productionready.io'
+})
+
+// 插件入口文件是导出的默认函数
+export default ({ store }) => {
+    // 设置请求拦截器
+    request.interceptors.request.use(config => {
+        const { user } = store.state
+
+        // 当存在 token 值是设置请求头 Authorization
+        if (user && user.token) {
+            config.headers.Authorization = `Token ${user.token}`
+        }
+        return config
+    })
+}
+```
+
+之前的 `utils/request.js` 可以删掉了，之前的网络请求方法就使用这边的 `request` 。注意：之前的 `request` 是以默认值导出，但这边必须以成员导出，所以对于的导入代码需要跟着改。
+
+定义完插件文件要记得注册插件，创建 NuxtJS 配置文件 `nuxt.config.js` ：
+
+```js
+export default {
+    // ~ 表示项目根路径
+    plugins: ['~/plugins/request']
+}
+```
+
+### 文章点赞
+
+点赞接口都是 `/api/articles/${slug}/favorite` ，添加点赞是 POST 请求，取消点赞是 DELETE 请求。
+
+给点赞按钮绑定事件方法 `handleFavorite`：
+
+```js
+export default {
+    // ...
+    methods: {
+        // 接收文章对象
+        async handleFavorite (article) {
+            // 不管是添加点赞还是取消点赞都会返回一个全新的文章对象
+            const { data: { article: newArticle } } = article.favorited
+                ? await deleteFavorite(article.slug)
+                : await addFavorite(article.slug)
+
+            // 赋值新的数据，响应数据变化后视图会跟着更新
+            article.favorited = newArticle.favorited
+            article.favoritesCount = newArticle.favoritesCount
+        }
+    }
+}
+```
+
+以上功能已经是实现的了，但是存在网络差的情况，接口请求不能马上响应，会导致用户以为没点成功，会再点一下，就导致重复请求。为了防止重复请求的情况，点赞按钮点下去的时候应该处于禁用状态，等接口得到响应了再解除禁用。
+
+由于 `articles` 不存在禁用状态的字段，所以我们需要在 `asyncData` 里给每一个 `article` 都添加点赞禁用状态：
+
+```js
+articles.forEach(v => (v.favoriteDisabled = false))
+```
+
+其实不设置值默认是 `undefined` ，`undefined` 转成布尔值就是 `false` 。但如果不在初始化的时候设置初始值，就不属于响应式数据，后续去修改值就不会触发视图更新。
+
+就禁用字段用上去，这时的视图是这样：
+
+```html
+...
+<button
+    class="btn btn-sm pull-xs-right btn-outline-primary"
+    :class="{ 'active': article.favorited }"
+    :disabled="article.favoriteDisabled"
+    @click="handleFavorite(article)"
+>
+    <i class="ion-heart"></i> {{ article.favoritesCount }}
+</button>
+...
+```
+
+`handleFavorite` 需要在请求开始前将 `favoriteDisabled` 设置为 `true` ，在请求结束后设置为 `false` ，如下：
+
+```diff
+export default {
+    // ...
+    methods: {
+        // 接收文章对象
+        async handleFavorite (article) {
++           article.favoriteDisabled = true
+            const { data: { article: newArticle } } = article.favorited
+                ? await deleteFavorite(article.slug)
+                : await addFavorite(article.slug)
+
+            article.favorited = newArticle.favorited
+            article.favoritesCount = newArticle.favoritesCount
++           article.favoriteDisabled = false
+        }
+    }
+}
+```
+
+每一个发起网络请求的地方都需要注意这个问题，都要问问自己，这边是否有可能会引发重复请求，如果有可能出现就需要做类似的处理。
+
+## 部署
+
+其他页面的联调都差不多，就不一一讲解了，接下来讲下部署环节。
+
+NuxtJS 项目既有前端代码又有后端代码，需要放在能够支持 NodeJS 的服务器上。Vercel 提供了一个免费的项目托管平台，这上面能够支持 NuxtJS 的运行。
+
+可以从 [NuxtJS 英文官网上](https://nuxtjs.org/faq/now-deployment) 找到相关部署教程，这上面文档写得有点简单，下列详细讲下操作流程：
+
+1. 注册 Vercel
+
+    进 [官网](https://vercel.com/) 找到 Sign Up ，使用 Github 进行注册。注意：使用 QQ 邮箱可能会注册失败，需要将 Github 的主邮箱地址改成非 QQ 邮箱的。
+
+2. 全局安装 Vercel
+
+    ```sh
+    $ yarn global add vercel
+    ```
+
+3. 配置项目
+
+    创建配置文件 `vercel.json`
+
+    ```json
+    {
+        "version": 2,
+        "builds": [
+            {
+                "src": "nuxt.config.js",
+                "use": "@nuxtjs/now-builder"
+            }
+        ]
+    }
+    ```
+
+    创建忽略文件 `.vercelignore`
+
+    ```
+    .nuxt
+    ```
+
+4. 命令行登录 Vercel
+
+    第一次使用需要登录
+
+    ```sh
+    $ vercel login
+    ```
+
+    输入邮箱后，提示需要到邮箱那边点确认，确认后就完成登录
+
+5. 部署
+
+    ```sh
+    # 第一次部署
+    $ vercel
+
+    # 后续再次部署
+    $ vercel --prod
+    ```
+
+    部署完后会把访问地址打印出来，点开就能访问

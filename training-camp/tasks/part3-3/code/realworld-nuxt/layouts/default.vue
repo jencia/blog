@@ -19,7 +19,7 @@
                             <nuxt-link
                                 class="nav-link"
                                 :class="$route.path === 'profile' ? active : ''"
-                                :to="`/profile/${user.id}`"
+                                :to="`/profile/${user.username}`"
                             >
                                 <img :src="user.image" class="user-pic">
                                 {{ user.username }}

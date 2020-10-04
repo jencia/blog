@@ -1,4 +1,4 @@
-import request from '@/utils/request'
+import { request } from '@/plugins/request'
 
 // 登录
 export function login (data) {
@@ -18,3 +18,19 @@ export function register (data) {
     })
 }
 
+// 获取当前用户信息
+export function getUser () {
+    return request({
+        method: 'GET',
+        url: '/api/user'
+    })
+}
+
+// 更新用户信息
+export function updateUser (user) {
+    return request({
+        method: 'PUT',
+        url: '/api/user',
+        data: { user }
+    })
+}

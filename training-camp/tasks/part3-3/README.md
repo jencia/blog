@@ -9,3 +9,8 @@
 要求
 
  - 发布码云上，可以直接展示网页
+
+答：
+
+- [代码地址](./code/realworld-nuxt)
+- 效果演示地址：[https://conduit.jencia.vercel.app](https://conduit.jencia.vercel.app)
