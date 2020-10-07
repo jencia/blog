@@ -1,18 +1,15 @@
 <template>
   <div class="home">
-    <img alt="Vue logo" src="../assets/logo.png">
-    <HelloWorld msg="Welcome to Your Vue.js App"/>
+    <p>$store.state.msg: {{ $store.state.msg }}</p>
+    <p>$store.getters.reverseMsg: {{ $store.getters.reverseMsg }}</p>
+    <p>$store.state.count: {{ $store.state.count }}</p>
+    <button @click="$store.commit('inc', 1)">commit</button>
+    <button @click="$store.dispatch('asyncAdd')">dispatch</button>
   </div>
 </template>
 
 <script>
-// @ is an alias to /src
-import HelloWorld from '@/components/HelloWorld.vue'
-
 export default {
-  name: 'Home',
-  components: {
-    HelloWorld
-  }
+  name: 'Home'
 }
 </script>
