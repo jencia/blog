@@ -1,4 +1,4 @@
-# vuex-cart-demo-template
+# vuex-cart-demo
 
 ## Project setup
 ```
