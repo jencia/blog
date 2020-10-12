@@ -185,7 +185,7 @@ const routes = [
 
 由于这里的 `<router-view>` 是属于 `Layout` 组件的，所以是属于 `Layout` 的子路由，应该在其配置上添加 children ，这里面就是用来配置子路由配置。子路由的 path 是会跟父路由的 path 合并的。如果父路由的 path 是 `/a` ，子路由是 `/b` ，子路由最终的路径是 `/a/b`。针对 `/` 有特殊处理，这边的 `//detail` 会合并成 `/detail` 。
 
-## 编程时导航
+## 编程式导航
 
 ```js
 this.$router.push('/detail')

@@ -47,4 +47,4 @@ training-camp/
 - part2-2：[ES Module](./notes/part2-2/ESModule.md)、[Webpack](./notes/part2-2/Webpack.md)、[Rollup](./notes/part2-2/Rollup.md)、[ESLint](./notes/part2-2/ESLint.md)、[作业](./tasks/part2-2/README.md)
 - part3-1：[Vue 2.x 学习](./notes/part3-1/VueStudy.md)、[vue-cli 学习](./notes/part3-1/VueCLIStudy.md)、[vue-loader 学习](./notes/part3-1/VueLoaderStudy.md)、[vue-router 学习](./notes/part3-1/VueRouterStudy.md)、[作业](./tasks/part3-1/README.md)
 - part3-2：暂无笔记、[作业](./tasks/part3-2/README.md)
-- part3-3：[Vuex](./notes/part3-3/Vuex.md)、[服务端渲染基础](./notes/part3-3/SSRConcept.md)、[NuxtJS 综合案例](./notes/part3-3/NuxtJSCase.md) ([案例演示地址](https://conduit.jencia.vercel.app))、[作业](./tasks/part3-3/README.md)
+- part3-3：[Vuex](./notes/part3-3/Vuex.md)、[服务端渲染基础](./notes/part3-3/SSRConcept.md)、[NuxtJS 基础](./notes/part3-3/NuxtJS.md)、[NuxtJS 综合案例](./notes/part3-3/NuxtJSCase.md) ([案例演示地址](https://conduit.jencia.vercel.app))、[作业](./tasks/part3-3/README.md)
