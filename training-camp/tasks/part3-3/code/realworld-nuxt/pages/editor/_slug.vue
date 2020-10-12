@@ -79,24 +79,28 @@ import { createArticle, getArticleDetail, updateArticle } from '@/api/article'
 export default {
     name: 'Editor',
     middleware: 'authenticated',
-    async asyncData ({ params: { slug } }) {
-        let article = {
-            title: '',
-            description: '',
-            body: '',
-            tagList: []
-        }
+    async asyncData ({ params: { slug }, redirect }) {
+        try {
+            let article = {
+                title: '',
+                description: '',
+                body: '',
+                tagList: []
+            }
 
-        if (slug) {
-            const { data } = await getArticleDetail(slug)
+            if (slug) {
+                const { data } = await getArticleDetail(slug)
 
-            article = data.article
-        }
+                article = data.article
+            }
 
-        return {
-            article,
-            loading: false,
-            tag: ''
+            return {
+                article,
+                loading: false,
+                tag: ''
+            }
+        } catch (e) {
+            redirect('/')
         }
     },
     methods: {

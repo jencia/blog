@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "nuxt",
     "start": "nuxt start",
-    "build": "nuxt build"
+    "build": "nuxt build",
+    "postbuild": "vercel --prod"
   },
   "dependencies": {
     "axios": "^0.20.0",

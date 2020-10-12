@@ -75,13 +75,17 @@ export default {
     name: 'FavoritesArticle',
     middleware: 'authenticated',
     components: { ArticleList },
-    async asyncData ({ params }) {
-        const { data: { profile } } = await getProfile(params.username)
+    async asyncData ({ params, redirect }) {
+        try {
+            const { data: { profile } } = await getProfile(params.username)
 
-        return {
-            profile,
-            active: 0,
-            followingDisabled: false
+            return {
+                profile,
+                active: 0,
+                followingDisabled: false
+            }
+        } catch (e) {
+            redirect('/')
         }
     },
     computed: {

@@ -46,13 +46,16 @@ import MarkdownIt from 'markdown-it'
 export default {
     name: 'Article',
     components: { ArticleMeta, ArticleComments },
-    async asyncData ({ params }) {
-        const { data: { article } } = await getArticleDetail(params.slug)
-        const md = new MarkdownIt()
+    async asyncData ({ params, redirect }) {
+        try {
+            const { data: { article } } = await getArticleDetail(params.slug)
+            const md = new MarkdownIt()
 
-        article.body = md.render(article.body)
-
-        return { article }
+            article.body = md.render(article.body)
+            return { article }
+        } catch (e) {
+            redirect('/')
+        }
     },
     head () {
         return {
