@@ -1,16 +1,13 @@
 const fs = require('fs')
 const express = require('express')
-const Vue = require('vue')
 const { createBundleRenderer } = require('vue-server-renderer')
 const setupDevServer = require('./build/setup-dev-server')
 
-const dev = process.env.NODE_ENV === 'development'
+const DEV = process.env.NODE_ENV === 'development'
 const server = express()
 let renderer, onReady
 
-server.use('/dist', express.static('./dist'))
-
-if (dev) {
+if (DEV) {
     // 开发环境
     // 监视打包构建 -> 重新生成 Renderer 渲染器
     onReady = setupDevServer(server, (serverBundle, template, clientManifest) => {
@@ -43,8 +40,10 @@ const render = async (req, res) => {
     }
 }
 
-server.get('*', !dev ? render : async (req, res) => {
-    await onReady
+server.use('/dist', express.static('./dist'))
+server.get('*', async (req, res) => {
+    DEV && await onReady
+    
     render(req, res)
 })
 

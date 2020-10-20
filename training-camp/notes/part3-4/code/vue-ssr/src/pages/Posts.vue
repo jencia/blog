@@ -4,7 +4,6 @@
     </ul>
 </template>
 <script>
-import axios from 'axios'
 import { mapState, mapActions } from 'vuex'
 
 export default {
@@ -20,8 +19,12 @@ export default {
     },
     
     serverPrefetch () {
-        // console.log(this.getPosts)
         return this.getPosts()
+    },
+    mounted () {
+        if (this.posts.length === 0) {
+            this.getPosts()
+        }
     }
 }
 </script>

@@ -294,4 +294,5 @@
 2. 在 `app.js` 里的 `createApp` 创建调用 `createStore` 获取 `store` ，在实例上使用并加入到方法的返回对象里
 3. 在 `entry-server.js` 里，在路由跳转完成之后，设置 `context.rendered` 值，值为一个函数，函数里将 `store.state` 赋值给 `context.state`
 4. 在 `entry-client.js` 里，使用 `store.replaceState` 将 `window.__INITIAL_STATE__` 替换掉当前的 `state`
-5. 在页面里面，在 `serverPrefetch` 生命周期里发起 Action
+5. 在页面里面，在 `serverPrefetch` 生命周期里发起 Action，注意 `serverPrefetch` 需要返回 Promise，才能确保 Action 执行完成才去渲染
+6. `serverPrefetch` 只在服务端执行，客户端渲染的页面需在 `mounted` 里请求数据，请求数据前先判断下数据有没有在服务端获取到
