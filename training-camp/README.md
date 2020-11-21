@@ -52,3 +52,7 @@ training-camp/
 - part3-2：暂无笔记、[作业](./tasks/part3-2/README.md)
 - part3-3：[Vuex](./notes/part3-3/Vuex.md)、[服务端渲染基础](./notes/part3-3/SSRConcept.md)、[NuxtJS 基础](./notes/part3-3/NuxtJS.md)、[NuxtJS 综合案例](./notes/part3-3/NuxtJSCase.md) ([案例演示地址](https://conduit.jencia.vercel.app))、[作业](./tasks/part3-3/README.md)
 - part3-4：[构建自己的 SSR](./notes/part3-4/VueSSR.md)、[封装 Vue.js 组件库](./notes/part3-4/ComponentLib.md)
+
+## 其他笔记
+
+- [从零带你搭建自动化部署](./class-notes/ServerDeploy.md)、[PM2 使用教程](./class-notes/PM2.md)
