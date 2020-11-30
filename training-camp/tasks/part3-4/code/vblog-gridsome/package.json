@@ -1,0 +1,19 @@
+{
+  "name": "vblog-gridsome",
+  "private": true,
+  "version": "v0.1.0",
+  "scripts": {
+    "build": "gridsome build",
+    "develop": "gridsome develop",
+    "explore": "gridsome explore"
+  },
+  "dependencies": {
+    "axios": "^0.21.0",
+    "element-ui": "^2.14.1",
+    "gridsome": "^0.7.0",
+    "js-base64": "^3.6.0",
+    "markdown-it": "^12.0.2",
+    "moment": "^2.29.1",
+    "normalize.css": "^8.0.1"
+  }
+}
