@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>effect test</title>
+</head>
+<body>
+    <script type="module">
+        import { reactive, effect } from './src/index.js'
+
+        const data = reactive({ name: 'foo' })
+
+        effect(() => {
+            console.log('effect 被执行，当前 name:', data.name);
+        })
+        
+        data.name = 'bar'
+        data.name = 'tom'
+    </script>
+</body>
+</html>

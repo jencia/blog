@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>computed</title>
+</head>
+<body>
+    <div id="app">
+        <ul>
+            <li v-for="(item, index) in data" :key="index">
+                <p>
+                    {{ item.text }} ({{ item.completed ? '完成' : '未完成' }})
+                    <button @click="handleComplete(index)" v-if="!item.completed">完成</button>
+                </p>
+            </li>
+        </ul>
+        <p>完成总数：{{ totalCompleted }}</p>
+        <button @click="handleAddData">添加任务</button>
+    </div>
+    <script type="module">
+        import { createApp, computed, reactive } from 'https://cdn.jsdelivr.net/npm/vue@3.0.3/dist/vue.esm-browser.js'
+
+        createApp({
+            setup () {
+                const data = reactive([])
+
+                const totalCompleted = computed(() => {
+                    console.log(111)
+                    return data.filter(v => !v.completed).length
+                })
+
+                return {
+                    data,
+                    totalCompleted,
+                    handleComplete (i) {
+                        data[i].completed = true
+                    },
+                    handleAddData () {
+                        data.push({
+                            text: `任务${Date.now()}`,
+                            completed: false
+                        })
+                    }
+                }
+            }
+        }).mount('#app')
+    </script>
+</body>
+</html>

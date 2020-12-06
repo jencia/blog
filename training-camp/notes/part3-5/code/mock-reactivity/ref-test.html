@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ref test</title>
+</head>
+<body>
+    <script type="module">
+        import { ref, effect } from './src/index.js'
+
+        const count = ref(0)
+
+        effect(() => {
+            console.log('count.value: ', count.value);
+        })
+        
+        count.value += 1
+        count.value += 1
+    </script>
+</body>
+</html>

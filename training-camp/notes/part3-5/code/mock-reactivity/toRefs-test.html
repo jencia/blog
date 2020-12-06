@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>toRefs test</title>
+</head>
+<body>
+    <script type="module">
+        import { reactive, effect, toRefs } from './src/index.js'
+
+        const data = reactive({ name: 'foo' })
+        const { name } = toRefs(data)
+
+        effect(() => {
+            console.log('name:', name.value);
+        })
+        
+        name.value = 'bar'
+        name.value = 'tom'
+    </script>
+</body>
+</html>

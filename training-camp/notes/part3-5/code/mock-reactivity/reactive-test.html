@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>reactive test</title>
+</head>
+<body>
+    <script type="module">
+        import { reactive } from './src/index.js'
+
+        const data = reactive({ name: 'foo' })
+
+        data.name           // name getter 被访问
+        data.name = 'foo'   // name setter 被访问
+        delete data.name    // name deleteProperty 被访问
+        
+    </script>
+</body>
+</html>

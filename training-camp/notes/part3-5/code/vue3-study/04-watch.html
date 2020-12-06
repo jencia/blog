@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>watch</title>
+</head>
+<body>
+    <div id="app">
+        <p>
+            请问一个 yes/no 的问题:
+            <input v-model="question">
+          </p>
+          <p>{{ answer }}</p>
+    </div>
+    <script type="module">
+        import { createApp, ref, reactive, watch } from 'https://cdn.jsdelivr.net/npm/vue@3.0.3/dist/vue.esm-browser.min.js'
+
+        createApp({
+            setup () {
+                const question = ref('')
+                const answer = ref('')
+
+                watch(question, async () => {
+                    const data = await fetch('https://www.yesno.wtf/api').then(res => res.json())
+
+                    answer.value = data.answer
+                })
+
+                return {
+                    question,
+                    answer
+                }
+            }
+        }).mount('#app')
+    </script>
+</body>
+</html>
