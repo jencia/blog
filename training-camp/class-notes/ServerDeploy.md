@@ -694,7 +694,7 @@ $ rm -f release.tgz
 
 如果这时候 nginx 有启动，就可以直接访问到项目了，根据以上的步骤做下来，访问路径应该是 `http://demo.jswalk.com/my-vue/` ，看到页面就代表部署成功了。
 
-### NuxtJS 项目部署
+### NuxtJS项目部署
 
 目标：以 `my-nuxtjs` 为项目名称发布到 `demo` 下的 `node-project` 里面。
 
@@ -862,7 +862,7 @@ $ pm2 start pm2.config.json
 
 #### 配置部署文件
 
-这边以 NuxtJS 项目为例，首先需要做一些部署前的配置，配置跟 [手动部署](NuxtJS 项目部署) 的一样，只是命令行要换种写法。
+这边以 NuxtJS 项目为例，首先需要做一些部署前的配置，配置跟 [手动部署](#NuxtJS项目部署) 的一样，只是命令行要换种写法。
 
 在项目根目录下创建 `.github/workflows/main.yml` 文件：
 
@@ -1048,3 +1048,19 @@ Github 有提供了一些内置的操作，或者说是封装好的代码单元�
 - `appleboy/ssh-action` 使用 SSH 登录服务器，并执行一些命令
 
 `main.yml` 文件代码用到的内容大概就这些，更多语法内容可以查看 [工作流语法文档](https://docs.github.com/cn/free-pro-team@latest/actions/reference/workflow-syntax-for-github-actions) 。
+
+## 总结
+
+自动化部署到这里就全部完成了，本文记录了从购买云服务器到搭建 Github Actions 自动化部署的全部过程。包括：
+
+- 云服务器购买和基本使用，域名购买和域名解析，安全组配置
+- 登录云服务器时可以配置免密登录
+- 在云服务器上搭建前端运行环境
+- nginx 基本使用、二级域名配置、项目分布规划
+- 手动部署和 Github Actions 自动化部署
+
+也许不够深入，但也足以应付大部分需求。不过这边的 Github Actions 部署比较适合个人开发者和开源研发人员。对于企业开发的话比较适合 Jenkins + GitLab，这种方式后续再找机会研究下，然后单独写一篇文章讲解。
+
+如果发现哪个地方写的有问题或者有疑问的，欢迎提 [issues](https://github.com/jencia/blog/issues)
+
+
