@@ -21,6 +21,7 @@
 
 代码方面
 
+- [FlexBoxFroggy](https://flexboxfroggy.com/#zh-cn) 以闯关玩游戏的方式学习 flex 布局
 - [LearnGit](https://learngitbranching.js.org) 专门用来学习 Git 的网站，以闯关的方式可视化展示一步步教大家 Git 的使用
 - [Carbon](https://carbon.now.sh) 输入代码生成较好看的代码截图
 - [Regulex](https://jex.im/regulex/) 正则表达式可视化展示，让你的正则更直观的展示规则
