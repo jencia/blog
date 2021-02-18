@@ -47,6 +47,9 @@ training-camp/
 - `2020-12-18` part3-5：Web 安全
 - `2020-12-31` part4-1：详解 Fiber
 - `2021-01-07` part3-6：JS 设计模式
+- `2021-01-20` part4-1：React 性能优化
+- `2021-01-21` part4-1：imagemin 和 node-sass 模块下载问题、TS 补充声明文件和声明模块、JS 类型增强
+- `2021-02-05` part3-5: Vue3.0 实战应用
 
 ## 笔记作业
 
@@ -63,4 +66,4 @@ training-camp/
 
 ## 其他笔记
 
-- [从零带你搭建自动化部署](./class-notes/ServerDeploy.md)、[PM2 使用教程](./class-notes/PM2.md)
+- [从零带你搭建自动化部署](./class-notes/ServerDeploy.md)、[PM2 使用教程](./class-notes/PM2.md)、[npm 深入了解](./class-notes/NpmDeepLearn.md)

@@ -33,3 +33,11 @@
 
 - [SVG-Morpheus](http://alexk111.github.io/SVG-Morpheus/) 图形之间平滑过渡的 JS 开源项目
 - [HOWLER.js](https://howlerjs.com/) 音频处理库
+
+## 工程化相关
+
+- [verdaccio](https://verdaccio.org/zh-CN/) 用于构建轻量 npm 私服
+- [PM2](https://pm2.io/) 创建守护进程工具（window 支持度不好）
+- [nrm](https://github.com/Pana/nrm) npm 镜像源管理工具
+- [node-semver](https://github.com/npm/node-semver#readme) npm 版本解析工具
+- [MIT](https://opensource.org/licenses/mit-license.php) LICENSE 文件模板
