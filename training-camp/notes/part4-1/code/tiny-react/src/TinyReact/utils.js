@@ -9,3 +9,8 @@ export function isFunctionComponent (virtualDOM) {
     }
     return !(virtualDOM.type.prototype && virtualDOM.type.prototype.render)
 }
+
+// 判断是否是同一个组件
+export function isSameComponent(virtualDOM, oldComponent) {
+    return oldComponent && virtualDOM.type === oldComponent.constructor
+}

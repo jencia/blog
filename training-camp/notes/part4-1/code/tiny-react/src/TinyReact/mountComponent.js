@@ -1,8 +1,9 @@
 import mountElement from './mountElement';
 import { isFunctionComponent } from './utils';
 
-export default function mountComponent (virtualDOM, container) {
+export default function mountComponent (virtualDOM, container, oldDOM) {
     let nextVirtualDOM = null
+    let component = null
 
     if (isFunctionComponent(virtualDOM)) {
         // 处理函数式组件
@@ -10,8 +11,17 @@ export default function mountComponent (virtualDOM, container) {
     } else {
         // 处理类组件
         nextVirtualDOM = buildClassComponent(virtualDOM)
+        component = nextVirtualDOM.component
     }
-    mountElement(nextVirtualDOM, container)
+
+    mountElement(nextVirtualDOM, container, oldDOM)
+
+    if (component) {
+        component.componentDidMount()
+        if (component.props && typeof component.props.ref === 'function') {
+            component.props.ref(component)
+        }
+    }
 }
 
 // 构建函数式组件

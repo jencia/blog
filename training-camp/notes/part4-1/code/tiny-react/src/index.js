@@ -56,11 +56,84 @@ class Alert extends TinyReact.Component {
   }
 }
 
+class Demo extends TinyReact.Component {
+  constructor (props) {
+    super(props)
+    this.handleClick = this.handleClick.bind(this)
+  }
+  handleClick () {
+    console.log(this.input.value)
+    console.log(this.al)
+  }
+  render () {
+    return (
+      <div>
+        <input type="text" ref={input => (this.input = input)} />
+        <button onClick={this.handleClick}>按钮</button>
+        <Alert ref={al => this.al = al} />
+      </div>
+    )
+  }
+}
+
+class Li extends TinyReact.Component {
+  componentWillUnmount () {
+    console.log('componentWillUnmount')
+  }
+  render () {
+    return (
+      <li>{this.props.children}</li>
+    )
+  }
+}
+// const Li = ({ children }) => (
+//   <li>{this.props.children}</li>
+// )
+
+class Demo2 extends TinyReact.Component {
+  constructor (props) {
+    super(props)
+
+    this.state = {
+      data: [
+        { id: 1, name: 'aaa' },
+        { id: 2, name: 'bbb' },
+        { id: 3, name: 'ccc' },
+        { id: 4, name: 'ddd' },
+      ]
+    }
+    this.handleClick = this.handleClick.bind(this)
+  }
+  handleClick () {
+    const data = JSON.parse(JSON.stringify(this.state.data))
+
+    // data.push(data.shift())
+    // const nextId = data.length + 1
+    // data.splice(1, 0, { id: nextId, name: `new${nextId}` })
+
+    data.pop()
+
+    this.setState({ data })
+  }
+  render () {
+    return (
+      <div>
+        <ul>
+          {this.state.data.map(v => (
+            <Li key={v.id}>{v.name}</Li>
+          ))}
+        </ul>
+        <button onClick={this.handleClick}>点我</button>
+      </div>
+    )
+  }
+}
+
 const root = document.getElementById('root')
 
-TinyReact.render(<Alert />, root)
+TinyReact.render(<Demo2 />, root)
 // TinyReact.render(virtualDOM, root)
 
 // setTimeout(() => {
-//   TinyReact.render(modifyDOM, root)
+//   TinyReact.render(<Demo title="2222" />, root)
 // }, 2000)
