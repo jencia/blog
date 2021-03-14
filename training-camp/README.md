@@ -64,7 +64,7 @@ training-camp/
 - part3-4：[构建自己的 SSR](./notes/part3-4/VueSSR.md)、[Gridsome](./notes/part3-4/Gridsome.md)、[封装 Vue.js 组件库](./notes/part3-4/ComponentLib.md)、[作业](./tasks/part3-4/README.md)
 - part3-5：[Vue 3.0 介绍](./notes/part3-5/Vue3Intro.md)、[Composition API](./notes/part3-5/CompositionAPI.md)、[Vue 3.0 响应式系统原理](./notes/part3-5/Vue3Reactivity.md)、[作业](./tasks/part3-5/README.md)（[访问地址](http://task.jswalk.com/vblog-gridsome/)）
 - part3-6：暂无笔记、[作业](./tasks/part3-6/README.md)（[访问地址](http://task.jswalk.com/edu-boss-fed/)）
-- part4-1：[TinyReact 学习](./notes/part4-1/TinyReactLearn.md)、[源码阅读](./notes/part4-1/ReactSourceCodeRead.md)、[作业](./tasks/part4-1/README.md)
+- part4-1：[TinyReact 学习](./notes/part4-1/TinyReactLearn.md)、[React 源码解读](./notes/part4-1/ReactSourceCodeRead.md)、[作业](./tasks/part4-1/README.md)
 
 ## 其他笔记
 
